@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useBasket } from "@/contexts/BasketContext";
-import { ClipboardIcon, GridIcon, HeartIcon, HomeIcon, PinIcon, ShoppingBagIcon, UserIcon } from "@/components/Icons";
+import { GridIcon, HomeIcon, PinIcon, ShoppingBagIcon, UserIcon } from "@/components/Icons";
 
 const tabs = [
   { href: "/home", label: "اكتشف", icon: <HomeIcon size={29} /> },
   { href: "/products", label: "المنتجات", icon: <GridIcon size={28} /> },
-  { href: "/favorites", label: "المفضلة", icon: <HeartIcon size={27} strokeWidth={1.9} /> },
   { href: "/basket", label: "السلة", icon: <ShoppingBagIcon size={28} strokeWidth={1.9} /> },
-  { href: "/orders", label: "الطلبات", icon: <ClipboardIcon size={28} strokeWidth={1.9} /> },
   { href: "/store", label: "المتجر", icon: <PinIcon size={29} strokeWidth={1.9} /> },
   { href: "/account", label: "حسابي", icon: <UserIcon size={29} strokeWidth={1.9} /> },
 ];

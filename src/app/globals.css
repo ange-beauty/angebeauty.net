@@ -73,7 +73,7 @@ a {
   bottom: 10px;
   z-index: 30;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 2px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #e7dfe1;
@@ -1706,7 +1706,7 @@ a {
     padding: 8px 12px 12px;
   }
   .tab-nav {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     row-gap: 8px;
     border-radius: 24px;
     padding: 8px 10px;
