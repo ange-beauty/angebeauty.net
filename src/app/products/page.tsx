@@ -4,6 +4,8 @@ import { fetchBrandsServer, fetchProductsServer } from "@/lib/serverApi";
 type ProductsSearchParams = {
   keyword?: string;
   brand?: string;
+  barcode?: string;
+  in_stock?: string;
 };
 
 export const metadata = {
@@ -19,6 +21,8 @@ export default async function ProductsPage({
   const params = await searchParams;
   const keyword = (params.keyword || "").trim();
   const brand = (params.brand || "").trim();
+  const barcode = (params.barcode || "").trim();
+  const inStockOnly = params.in_stock === "1";
 
   const [productsResponse, brands] = await Promise.all([
     fetchProductsServer({
@@ -26,6 +30,7 @@ export default async function ProductsPage({
       limit: 10,
       keyword: keyword || undefined,
       brand: brand || undefined,
+      barcode: barcode || undefined,
     }),
     fetchBrandsServer(),
   ]);
@@ -36,6 +41,8 @@ export default async function ProductsPage({
       initialHasMore={productsResponse.hasMore}
       initialKeyword={keyword}
       initialBrand={brand}
+      initialBarcode={barcode}
+      initialInStockOnly={inStockOnly}
       brands={brands}
     />
   );

@@ -1340,28 +1340,58 @@ a {
   position: sticky;
   top: 74px;
   z-index: 10;
+  padding: 8px;
 }
 
-.products-search-row {
+.products-search-shell {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr;
   gap: 8px;
   align-items: center;
 }
 
-.products-search-input {
-  text-align: right;
+.products-filter-trigger {
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  border: 1px solid #e2d6d9;
+  background: #7e4a53;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
 }
 
-.products-filter-button {
-  min-width: 88px;
-  position: relative;
+.products-search-field {
+  min-height: 48px;
+  border: 1px solid #dfd2d5;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+}
+
+.products-search-input-plain {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  min-height: 44px;
+  font-size: 16px;
+  text-align: right;
+  color: #2b1f23;
+}
+
+.products-search-input-plain::placeholder {
+  color: #8f7d82;
 }
 
 .products-filter-dot {
   position: absolute;
-  top: 7px;
-  right: 9px;
+  top: 10px;
+  right: 10px;
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -1397,12 +1427,16 @@ a {
 }
 
 .products-modal {
-  width: min(860px, 100%);
+  width: min(1920px, 100%);
   max-height: 84vh;
   overflow: auto;
   background: #fff;
   border-radius: 24px 24px 0 0;
   border: 1px solid var(--border);
+}
+
+.products-modal-wide {
+  max-height: 76vh;
 }
 
 .products-modal-header,
@@ -1424,6 +1458,22 @@ a {
   font-size: 20px;
 }
 
+.products-modal-header-row {
+  flex-direction: row;
+}
+
+.products-modal-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .products-modal-body {
   padding: 14px;
   display: grid;
@@ -1431,8 +1481,20 @@ a {
 }
 
 .products-filter-section h3 {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 16px;
+}
+
+.products-section-head {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+}
+
+.products-section-head p {
+  margin: 0;
+  color: #b3aaad;
+  font-size: 14px;
 }
 
 .products-filter-row {
@@ -1474,6 +1536,112 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.products-filter-input {
+  min-height: 48px;
+  border-radius: 14px;
+  background: #f7f7f7;
+  border-color: #ededed;
+}
+
+.products-availability-toggle {
+  justify-self: start;
+  position: relative;
+  width: 54px;
+  height: 30px;
+  display: inline-flex;
+}
+
+.products-availability-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.products-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #ebebeb;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.products-toggle-slider::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.products-availability-toggle input:checked + .products-toggle-slider {
+  background: #171719;
+}
+
+.products-availability-toggle input:checked + .products-toggle-slider::before {
+  transform: translateX(24px);
+}
+
+.products-availability-toggle.disabled {
+  opacity: 0.55;
+}
+
+.products-helper-note {
+  margin: 0;
+  color: #8a7a7f;
+  font-size: 14px;
+  text-align: right;
+}
+
+.products-brands-panel {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+}
+
+.products-brand-chip {
+  border: 1px solid #e7dfe1;
+  background: #fff;
+  color: #3d3034;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.products-brand-chip.active {
+  background: #171719;
+  color: #fff;
+  border-color: #171719;
+}
+
+.products-empty-state {
+  margin: 0;
+  color: #9a8d91;
+  font-size: 15px;
+}
+
+.products-modal-footer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.products-modal-action {
+  min-height: 48px;
+  justify-content: center;
+}
+
+.products-modal-action-dark {
+  background: #171719;
+  border-color: #171719;
 }
 
 @media (min-width: 901px) {
@@ -1562,6 +1730,12 @@ a {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
+  }
+  .products-modal-header-row {
+    flex-direction: row;
+  }
+  .products-modal-footer-actions {
+    grid-template-columns: 1fr;
   }
   .product-detail-image {
     width: 100%;

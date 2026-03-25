@@ -116,3 +116,23 @@ export function CloseIcon({ size = 18, color = "currentColor", strokeWidth = 2 }
     </svg>
   );
 }
+
+export function SearchIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" stroke={color} strokeWidth={strokeWidth} />
+      <path d="m20 20-3.5-3.5" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function FilterIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h14M22 18h-2" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <circle cx="16" cy="6" r="2" stroke={color} strokeWidth={strokeWidth} />
+      <circle cx="6" cy="12" r="2" stroke={color} strokeWidth={strokeWidth} />
+      <circle cx="20" cy="18" r="2" stroke={color} strokeWidth={strokeWidth} />
+    </svg>
+  );
+}
