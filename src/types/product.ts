@@ -7,6 +7,14 @@ export interface Product {
   brandId?: string;
   category: ProductCategory;
   price: number;
+  basePrice?: number;
+  discountAmount?: number;
+  appliedOffer?: {
+    id?: string;
+    name?: string;
+    type?: string;
+    value?: number;
+  } | null;
   image: string;
   description: string;
   ingredients?: string[];
@@ -27,6 +35,18 @@ export interface APIProduct {
   name_ar?: string | null;
   name_en?: string | null;
   price: number | string;
+  base_price?: number | string | null;
+  final_price?: number | string | null;
+  discount_amount?: number | string | null;
+  applied_offer?: {
+    id?: string | null;
+    nameAr?: string | null;
+    name_ar?: string | null;
+    nameEn?: string | null;
+    name_en?: string | null;
+    type?: string | null;
+    value?: number | string | null;
+  } | null;
   description?: string;
   description_ar?: string | null;
   description_en?: string | null;
@@ -149,7 +169,33 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
     imageUrl = "";
   }
 
-  const parsedPrice = typeof apiProduct.price === "number" ? apiProduct.price : parseFloat(apiProduct.price || "0");
+  const parsedBasePrice =
+    typeof apiProduct.base_price === "number"
+      ? apiProduct.base_price
+      : parseFloat(apiProduct.base_price?.toString() || apiProduct.price?.toString() || "0");
+  const parsedFinalPrice =
+    typeof apiProduct.final_price === "number"
+      ? apiProduct.final_price
+      : parseFloat(apiProduct.final_price?.toString() || apiProduct.price?.toString() || "0");
+  const parsedDiscount =
+    typeof apiProduct.discount_amount === "number"
+      ? apiProduct.discount_amount
+      : parseFloat(apiProduct.discount_amount?.toString() || "0");
+  const finalPrice = Number.isFinite(parsedFinalPrice) ? parsedFinalPrice : 0;
+  const basePrice = Number.isFinite(parsedBasePrice) ? parsedBasePrice : finalPrice;
+  const discountAmount = Number.isFinite(parsedDiscount) ? parsedDiscount : Math.max(0, basePrice - finalPrice);
+  const appliedOffer = apiProduct.applied_offer
+    ? {
+        id: apiProduct.applied_offer.id?.toString(),
+        name: repairArabicMojibake(apiProduct.applied_offer.nameAr || apiProduct.applied_offer.name_ar) ||
+          repairArabicMojibake(apiProduct.applied_offer.nameEn || apiProduct.applied_offer.name_en),
+        type: apiProduct.applied_offer.type?.toString(),
+        value:
+          typeof apiProduct.applied_offer.value === "number"
+            ? apiProduct.applied_offer.value
+            : parseFloat(apiProduct.applied_offer.value?.toString() || "0"),
+      }
+    : null;
 
   return {
     id: apiProduct.id?.toString() || "",
@@ -157,7 +203,10 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
     brand: brandName,
     brandId,
     category,
-    price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
+    price: finalPrice,
+    basePrice,
+    discountAmount,
+    appliedOffer,
     image: imageUrl,
     description: productDescription,
     ingredients: apiProduct.tags || [],

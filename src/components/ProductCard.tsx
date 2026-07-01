@@ -24,6 +24,10 @@ export default function ProductCard({ product }: Props) {
   const available = getAvailableQuantityForSellingPoint(product, selectedSellingPoint?.id);
   const displayBrand = getDisplayBrand(product.brand);
   const href = productHref(product);
+  const hasDiscount =
+    typeof product.basePrice === "number" &&
+    product.basePrice > product.price &&
+    (product.discountAmount ?? product.basePrice - product.price) > 0;
 
   return (
     <article className="product-card">
@@ -47,25 +51,30 @@ export default function ProductCard({ product }: Props) {
         <Link href={href}>
           <h3 className="product-name">{product.name}</h3>
         </Link>
-        <p className="product-price">{formatPrice(product.price)}</p>
-        <button
-          className="product-basket-btn"
-          aria-label="add to basket"
-          onClick={() => {
-            if (!selectedSellingPoint?.id) {
-              window.alert("يرجى اختيار نقطة البيع أولاً من صفحة المتجر.");
-              return;
-            }
-            if (available !== null && qty >= available) {
-              window.alert("لا يمكن إضافة كمية أكبر من المتوفر في المتجر المحدد.");
-              return;
-            }
-            addToBasket(product.id, 1);
-          }}
-        >
-          <ShoppingBagIcon color="#7E4A53" size={16} />
-          {qty > 0 ? <span className="product-basket-badge">{qty}</span> : null}
-        </button>
+        <div className="product-footer">
+          <div className="product-price-stack">
+            {hasDiscount ? <p className="product-old-price">{formatPrice(product.basePrice!)}</p> : null}
+            <p className={`product-price ${hasDiscount ? "discounted" : ""}`}>{formatPrice(product.price)}</p>
+          </div>
+          <button
+            className="product-basket-btn"
+            aria-label="add to basket"
+            onClick={() => {
+              if (!selectedSellingPoint?.id) {
+                window.alert("يرجى اختيار نقطة البيع أولاً من صفحة المتجر.");
+                return;
+              }
+              if (available !== null && qty >= available) {
+                window.alert("لا يمكن إضافة كمية أكبر من المتوفر في المتجر المحدد.");
+                return;
+              }
+              addToBasket(product.id, 1);
+            }}
+          >
+            <ShoppingBagIcon color="#7E4A53" size={16} />
+            {qty > 0 ? <span className="product-basket-badge">{qty}</span> : null}
+          </button>
+        </div>
       </div>
     </article>
   );
