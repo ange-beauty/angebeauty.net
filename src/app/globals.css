@@ -1574,6 +1574,25 @@ a {
   text-align: right;
 }
 
+.product-price-value.discounted,
+.product-sticky-price-value.discounted {
+  color: #b9442b;
+}
+
+.product-detail-old-price,
+.product-sticky-old-price {
+  margin: 6px 0 0;
+  color: #8f7d82;
+  font-weight: 700;
+  line-height: 1;
+  text-align: right;
+  text-decoration: line-through;
+}
+
+.product-detail-old-price {
+  font-size: 15px;
+}
+
 .product-availability {
   margin: 6px 0 0;
   font-size: 13px;
@@ -1627,6 +1646,10 @@ a {
   color: #7e4a53;
   font-weight: 700;
   text-align: right;
+}
+
+.product-sticky-old-price {
+  font-size: 18px;
 }
 
 .product-description-card {

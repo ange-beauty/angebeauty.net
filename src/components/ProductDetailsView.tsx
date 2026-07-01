@@ -20,6 +20,10 @@ export default function ProductDetailsView({ product }: Props) {
   const qty = getItemQuantity(product.id);
   const available = getAvailableQuantityForSellingPoint(product, selectedSellingPoint?.id);
   const hasStock = available === null || available > qty;
+  const hasDiscount =
+    typeof product.basePrice === "number" &&
+    product.basePrice > product.price &&
+    (product.discountAmount ?? product.basePrice - product.price) > 0;
 
   const availabilityText = !selectedSellingPoint?.id
     ? "اختر نقطة البيع لمعرفة التوفر."
@@ -60,7 +64,8 @@ export default function ProductDetailsView({ product }: Props) {
 
           <div className="product-price-box">
             <p className="product-price-label">السعر</p>
-            <p className="product-price-value">{formatPrice(product.price)}</p>
+            {hasDiscount ? <p className="product-detail-old-price">{formatPrice(product.basePrice!)}</p> : null}
+            <p className={`product-price-value ${hasDiscount ? "discounted" : ""}`}>{formatPrice(product.price)}</p>
             <p className={`product-availability ${hasStock ? "ok" : "out"}`}>{availabilityText}</p>
           </div>
         </article>
@@ -69,7 +74,8 @@ export default function ProductDetailsView({ product }: Props) {
       <section className="product-sticky-bar">
         <div>
           <p className="product-sticky-price-label">السعر</p>
-          <p className="product-sticky-price-value">{formatPrice(product.price)}</p>
+          {hasDiscount ? <p className="product-sticky-old-price">{formatPrice(product.basePrice!)}</p> : null}
+          <p className={`product-sticky-price-value ${hasDiscount ? "discounted" : ""}`}>{formatPrice(product.price)}</p>
         </div>
         <button
           type="button"
