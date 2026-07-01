@@ -1,27 +1,28 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Product } from "@/types/product";
-import { productHref } from "@/lib/productUrl";
-import { getDisplayBrand } from "@/lib/brand";
-import { formatPrice } from "@/lib/formatPrice";
 
-type Props = {
+export type OfferHeroSlide = {
+  id: string;
+  badge: string;
+  title: string;
+  description: string;
+  valueLabel: string;
+  href: string;
   products: Product[];
 };
 
-export default function HomeHighlightsSlider({ products }: Props) {
+type Props = {
+  slides: OfferHeroSlide[];
+};
+
+export default function HomeHighlightsSlider({ slides }: Props) {
   const trackRef = useRef<HTMLDivElement | null>(null);
-  const [viewportWidth, setViewportWidth] = useState(1200);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const items = useMemo(() => products.slice(0, 6), [products]);
-  const highlightHeight = viewportWidth >= 1280
-    ? 420
-    : viewportWidth >= 900
-      ? 360
-      : Math.max(200, Math.round(viewportWidth * 0.52));
+  const items = useMemo(() => slides.slice(0, 5), [slides]);
 
   const getStep = useCallback(() => {
     const track = trackRef.current;
@@ -51,23 +52,16 @@ export default function HomeHighlightsSlider({ products }: Props) {
   );
 
   useEffect(() => {
-    const onResize = () => setViewportWidth(window.innerWidth);
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  useEffect(() => {
     if (!items.length) return;
     scrollToIndex(0, false);
-  }, [items.length, viewportWidth, scrollToIndex]);
+  }, [items.length, scrollToIndex]);
 
   useEffect(() => {
     if (items.length < 2) return;
 
     const timer = window.setInterval(() => {
       scrollToIndex(activeIndex + 1);
-    }, 3500);
+    }, 4500);
 
     return () => window.clearInterval(timer);
   }, [activeIndex, items.length, scrollToIndex]);
@@ -94,61 +88,75 @@ export default function HomeHighlightsSlider({ products }: Props) {
   };
 
   return (
-    <>
-      <div className="highlights-shell">
-        <button type="button" className="carousel-arrow" aria-label="السابق" onClick={goPrev}>
-          {"<"}
-        </button>
+    <div className="offer-hero-carousel">
+      <button type="button" className="offer-arrow offer-arrow-prev" aria-label="السابق" onClick={goPrev}>
+        {"<"}
+      </button>
 
-        <div
-          ref={trackRef}
-          className="highlights-track"
-          onScroll={handleTrackScroll}
-        >
-          {items.map((product, index) => {
-            const brand = getDisplayBrand(product.brand);
-            return (
-              <article
-                key={product.id}
-                className="highlight-card"
-                style={{ height: `${highlightHeight}px` }}
-              >
-                <Link href={productHref(product)}>
-                  <img
-                    src={product.image || "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1000&h=1000&fit=crop"}
-                    alt={product.name}
-                    loading={activeIndex === index ? "eager" : "lazy"}
-                    decoding="async"
-                  />
-                  <div className="highlight-overlay">
-                    <div className="highlight-text-surface">
-                      {brand ? <p className="highlight-brand">{brand}</p> : null}
-                      <p className="highlight-name">{product.name}</p>
-                      <p className="highlight-price">{formatPrice(product.price)}</p>
-                    </div>
+      <div ref={trackRef} className="offer-hero-track" onScroll={handleTrackScroll}>
+        {items.map((slide, index) => {
+          const heroProduct = slide.products[0];
+          const supportingProducts = slide.products.slice(1, 4);
+
+          return (
+            <article key={slide.id} className="offer-hero-slide">
+              <Link href={slide.href} className="offer-hero-link">
+                <div className="offer-hero-copy">
+                  <p className="offer-kicker">{slide.badge}</p>
+                  <h1>{slide.title}</h1>
+                  <p className="offer-title">{slide.description}</p>
+                  <div className="offer-price-row">
+                    <span>العرض</span>
+                    <strong>{slide.valueLabel}</strong>
                   </div>
-                </Link>
-              </article>
-            );
-          })}
-        </div>
+                  <span className="offer-cta">تسوقي العرض</span>
+                </div>
 
-        <button type="button" className="carousel-arrow" aria-label="التالي" onClick={goNext}>
-          {">"}
-        </button>
+                <div className="offer-hero-media" aria-hidden="true">
+                  <div className="offer-glow offer-glow-one" />
+                  <div className="offer-glow offer-glow-two" />
+                  {heroProduct?.image ? (
+                    <img
+                      src={heroProduct.image}
+                      alt=""
+                      className="offer-hero-image"
+                      loading={activeIndex === index ? "eager" : "lazy"}
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="offer-visual-fallback">{slide.title.slice(0, 2)}</div>
+                  )}
+                  {supportingProducts.length > 0 ? (
+                    <div className="offer-product-thumbs">
+                      {supportingProducts.map((product) =>
+                        product.image ? (
+                          <img key={product.id} src={product.image} alt="" loading="lazy" decoding="async" />
+                        ) : null
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              </Link>
+            </article>
+          );
+        })}
       </div>
 
-      <div className="highlight-dots">
-        {items.map((product, index) => (
+      <button type="button" className="offer-arrow offer-arrow-next" aria-label="التالي" onClick={goNext}>
+        {">"}
+      </button>
+
+      <div className="offer-dots">
+        {items.map((slide, index) => (
           <button
-            key={product.id}
+            key={slide.id}
             type="button"
-            className={`dot ${index === activeIndex ? "active" : ""}`}
-            aria-label={`الانتقال إلى الشريحة ${index + 1}`}
+            className={`offer-dot ${index === activeIndex ? "active" : ""}`}
+            aria-label={`الانتقال إلى العرض ${index + 1}`}
             onClick={() => scrollToIndex(index)}
           />
         ))}
       </div>
-    </>
+    </div>
   );
 }

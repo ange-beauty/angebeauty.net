@@ -6,6 +6,11 @@ import AppShell from "@/components/AppShell";
 export const metadata: Metadata = {
   title: "Ange Beauty",
   description: "Ange Beauty web app migrated from Expo mobile app.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

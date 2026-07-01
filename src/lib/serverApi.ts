@@ -13,6 +13,7 @@ export type ServerFetchProductsParams = {
   keyword?: string;
   category?: string;
   brand?: string;
+  tag?: string;
   barcode?: string;
   highlighted?: number | boolean;
 };
@@ -21,6 +22,24 @@ export type ServerFetchProductsResponse = {
   products: Product[];
   hasMore: boolean;
   totalRows: number;
+};
+
+export type PublicOfferTarget = {
+  target_aggregate_type?: string | null;
+  target_aggregate_id?: string | null;
+  [key: string]: unknown;
+};
+
+export type PublicOffer = {
+  id: string;
+  name_ar?: string | null;
+  name_en?: string | null;
+  description_ar?: string | null;
+  description_en?: string | null;
+  offer_type?: string | null;
+  offer_value?: number | string | null;
+  targets?: PublicOfferTarget[];
+  [key: string]: unknown;
 };
 
 async function serverFetch(path: string, init?: RequestInit) {
@@ -38,7 +57,7 @@ async function serverFetch(path: string, init?: RequestInit) {
 export async function fetchProductsServer(
   params: ServerFetchProductsParams = {},
 ): Promise<ServerFetchProductsResponse> {
-  const { page = 1, limit = 20, keyword, category, brand, barcode, highlighted } = params;
+  const { page = 1, limit = 20, keyword, category, brand, tag, barcode, highlighted } = params;
   const queryParams = new URLSearchParams();
   queryParams.append("page", page.toString());
   queryParams.append("limit", limit.toString());
@@ -47,6 +66,7 @@ export async function fetchProductsServer(
   if (keyword) queryParams.append("keyword", keyword);
   if (category) queryParams.append("category", category);
   if (brand) queryParams.append("brand", brand);
+  if (tag) queryParams.append("tag", tag);
   if (barcode) queryParams.append("barcode", barcode);
   if (typeof highlighted !== "undefined") {
     queryParams.append("highlighted", highlighted ? "1" : "0");
@@ -84,6 +104,25 @@ export async function fetchProductsServer(
     };
   } catch {
     return { products: [], hasMore: false, totalRows: 0 };
+  }
+}
+
+export async function fetchPublicOffersServer(): Promise<PublicOffer[]> {
+  try {
+    const response = await serverFetch("/api/v1/offers/public");
+    if (!response.ok) return [];
+    const result = await response.json();
+    if (!result || result.success !== true || !Array.isArray(result.data)) return [];
+
+    return result.data
+      .filter((offer: any) => offer && offer.id)
+      .map((offer: any) => ({
+        ...offer,
+        id: String(offer.id),
+        targets: Array.isArray(offer.targets) ? offer.targets : [],
+      }));
+  } catch {
+    return [];
   }
 }
 

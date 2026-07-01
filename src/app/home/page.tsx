@@ -1,94 +1,127 @@
-﻿import Link from "next/link";
-import HomeHighlightsSlider from "@/components/HomeHighlightsSlider";
-import { getDisplayBrand } from "@/lib/brand";
-import { formatPrice } from "@/lib/formatPrice";
-import { productHref } from "@/lib/productUrl";
-import { fetchProductsServer } from "@/lib/serverApi";
+import HomeHighlightsSlider, { type OfferHeroSlide } from "@/components/HomeHighlightsSlider";
+import { productHref, slugifyProductName } from "@/lib/productUrl";
+import {
+  fetchProductByIdServer,
+  fetchProductsServer,
+  fetchPublicOffersServer,
+  type PublicOffer,
+  type PublicOfferTarget,
+} from "@/lib/serverApi";
+import type { Product } from "@/types/product";
 
 export const metadata = {
-  title: "أنج بيوتي | اكتشف",
-  description: "اكتشف المنتجات المميزة والأكثر مبيعاً من أنج بيوتي.",
+  title: "أنج بيوتي | العروض",
+  description: "اكتشف عروض ومنتجات أنج بيوتي المميزة.",
 };
 
+function getOfferName(offer: PublicOffer) {
+  return String(offer.name_ar || offer.name_en || "عرض أنج بيوتي").trim();
+}
+
+function getOfferDescription(offer: PublicOffer) {
+  return String(offer.description_ar || offer.description_en || "منتجات مختارة بسعر خاص لفترة محدودة.").trim();
+}
+
+function getOfferValueLabel(offer: PublicOffer) {
+  const value = Number(offer.offer_value || 0);
+  const type = String(offer.offer_type || "").trim();
+
+  if (type === "percentage_discount") return `${value}%`;
+  if (type === "fixed_discount") return `خصم ${value.toLocaleString("ar-IQ")}`;
+  if (type === "fixed_price") return `${value.toLocaleString("ar-IQ")}`;
+  return "عرض خاص";
+}
+
+function normalizeTarget(target: PublicOfferTarget) {
+  const type = String(target.target_aggregate_type || target.TargetAggregateType || "")
+    .trim()
+    .toLowerCase();
+  const id = String(target.target_aggregate_id || target.TargetAggregateId || "").trim();
+  return { type, id };
+}
+
+async function fetchProductsForOffer(offer: PublicOffer): Promise<Product[]> {
+  const targets = (offer.targets || []).map(normalizeTarget).filter((target) => target.type && target.id);
+
+  for (const target of targets) {
+    if (target.type === "product") {
+      const product = await fetchProductByIdServer(target.id);
+      if (product) return [product];
+    }
+
+    if (target.type === "brand") {
+      const response = await fetchProductsServer({ page: 1, limit: 4, brand: target.id });
+      if (response.products.length) return response.products;
+    }
+
+    if (target.type === "category") {
+      const response = await fetchProductsServer({ page: 1, limit: 4, category: target.id });
+      if (response.products.length) return response.products;
+    }
+
+    if (target.type === "tag") {
+      const response = await fetchProductsServer({ page: 1, limit: 4, tag: target.id });
+      if (response.products.length) return response.products;
+    }
+  }
+
+  return [];
+}
+
+function buildOfferHref(offer: PublicOffer, products: Product[]) {
+  const brandId = products.find((product) => product.brandId)?.brandId;
+  if (brandId) {
+    const brandName = products.find((product) => product.brandId === brandId)?.brand || getOfferName(offer);
+    return `/products/brand/${encodeURIComponent(brandId)}/${encodeURIComponent(slugifyProductName(brandName) || "brand")}`;
+  }
+
+  return "/products";
+}
+
+function buildFallbackSlides(products: Product[]): OfferHeroSlide[] {
+  return products.slice(0, 5).map((product) => ({
+    id: `product-${product.id}`,
+    badge: "منتج مميز",
+    title: product.brand || "Ange Beauty",
+    description: product.name,
+    valueLabel: product.price ? product.price.toLocaleString("ar-IQ") : "عرض خاص",
+    href: productHref(product),
+    products: [product],
+  }));
+}
+
 export default async function HomePage() {
-  const [productsResponse, highlightedResponse] = await Promise.all([
-    fetchProductsServer({ page: 1, limit: 30 }),
+  const [offers, highlightedResponse] = await Promise.all([
+    fetchPublicOffersServer(),
     fetchProductsServer({ page: 1, limit: 8, highlighted: 1 }),
   ]);
-
-  const products = productsResponse.products || [];
   const highlighted = highlightedResponse.products || [];
-  const mostSellingProducts = products.slice(6, 14);
-  const saleProducts = products.slice(14, 20);
+
+  const offerSlides = await Promise.all(
+    offers.slice(0, 5).map(async (offer): Promise<OfferHeroSlide | null> => {
+      const products = await fetchProductsForOffer(offer);
+
+      return {
+        id: offer.id,
+        badge: "عرض فعال",
+        title: getOfferName(offer),
+        description: getOfferDescription(offer),
+        valueLabel: getOfferValueLabel(offer),
+        href: buildOfferHref(offer, products),
+        products,
+      };
+    })
+  );
+
+  const slides = offerSlides.filter((slide): slide is OfferHeroSlide => Boolean(slide))
+    .filter((slide) => slide.products.length > 0);
+  const heroSlides = slides.length > 0 ? slides : buildFallbackSlides(highlighted);
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
-      <section className="card">
-        <h1 className="page-title">اكتشف</h1>
-        <p className="muted">جمالك يبدأ من هنا.</p>
-      </section>
-
-      <section className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontSize: 20 }}>مميزات اليوم</h2>
-          <Link href="/products" className="muted">
-            عرض الكل
-          </Link>
-        </div>
-        {!highlighted.length ? <p className="muted">لا توجد منتجات مميزة حالياً.</p> : null}
-        <HomeHighlightsSlider products={highlighted} />
-      </section>
-
-      <section className="home-section">
-        <h2 className="home-section-title">الأكثر مبيعًا</h2>
-        {!mostSellingProducts.length ? <p className="muted">لا توجد منتجات حالياً.</p> : null}
-        <div className="mini-products-row">
-          {mostSellingProducts.map((product) => {
-            const brand = getDisplayBrand(product.brand);
-            return (
-              <Link key={product.id} href={productHref(product)} className="mini-card">
-                <img
-                  src={product.image || "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop"}
-                  alt={product.name}
-                  className="mini-image"
-                  loading="lazy"
-                  decoding="async"
-                />
-                {brand ? <p className="mini-brand">{brand}</p> : null}
-                <p className="mini-name">{product.name}</p>
-                <p className="mini-price">{formatPrice(product.price)}</p>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="home-section">
-        <h2 className="home-section-title">العروض والتخفيضات</h2>
-
-        <article className="promo-card">
-          <h3 className="promo-title">عرض الأسبوع</h3>
-          <p className="promo-subtitle">خصم محدود على مجموعة منتخبة</p>
-          <Link href="/products" className="promo-button">
-            تسوق الآن <span>←</span>
-          </Link>
-        </article>
-
-        <div className="sales-row">
-          {saleProducts.map((product) => (
-            <Link key={product.id} href={productHref(product)} className="sale-card">
-              <img
-                src={product.image || "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500&h=500&fit=crop"}
-                alt={product.name}
-                className="sale-image"
-                loading="lazy"
-                decoding="async"
-              />
-              <p className="sale-name">{product.name}</p>
-              <p className="sale-price">{formatPrice(product.price)}</p>
-            </Link>
-          ))}
-        </div>
+    <div className="home-page">
+      <section className="home-hero" aria-label="عروض أنج بيوتي">
+        {!heroSlides.length ? <p className="muted">لا توجد عروض متاحة حالياً.</p> : null}
+        <HomeHighlightsSlider slides={heroSlides} />
       </section>
     </div>
   );
