@@ -3,7 +3,13 @@
 import { useSellingPoint } from "@/contexts/SellingPointContext";
 
 export default function StorePage() {
-  const { sellingPoints, selectedSellingPoint, setSelectedSellingPointId, isLoadingSellingPoints } = useSellingPoint();
+  const {
+    sellingPoints,
+    selectedSellingPoint,
+    setSelectedSellingPointId,
+    isLoadingSellingPoints,
+    sellingPointsError,
+  } = useSellingPoint();
 
   return (
     <section className="store-page">
@@ -13,6 +19,15 @@ export default function StorePage() {
       </header>
 
       {isLoadingSellingPoints ? <p className="muted">جاري تحميل نقاط البيع...</p> : null}
+      {!isLoadingSellingPoints && sellingPointsError ? (
+        <p className="error">تعذر تحميل نقاط البيع: {sellingPointsError}</p>
+      ) : null}
+      {!isLoadingSellingPoints && !sellingPointsError ? (
+        <p className="muted">عدد نقاط البيع المتاحة: {sellingPoints.length}</p>
+      ) : null}
+      {!isLoadingSellingPoints && !sellingPointsError && sellingPoints.length === 0 ? (
+        <p className="muted">لا توجد نقاط بيع مفعلة للبيع حالياً.</p>
+      ) : null}
 
       <button
         type="button"

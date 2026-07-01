@@ -7,6 +7,7 @@ import { CloseIcon, FilterIcon, SearchIcon } from "@/components/Icons";
 import { useSellingPoint } from "@/contexts/SellingPointContext";
 import { fetchProducts, type Brand } from "@/lib/api";
 import { getAvailableQuantityForSellingPoint } from "@/lib/availability";
+import { slugifyProductName } from "@/lib/productUrl";
 import type { Product } from "@/types/product";
 
 type Props = {
@@ -19,7 +20,10 @@ type Props = {
   brands: Brand[];
 };
 
+const BRAND_ALL_FILTER = "ALL";
+
 const BRAND_LETTERS = [
+  BRAND_ALL_FILTER,
   "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
   "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
   "0", "-", "9",
@@ -30,22 +34,33 @@ function getBrandLabel(brand: Brand): string {
 }
 
 function startsWithLetter(brand: Brand, letter: string): boolean {
-  const label = getBrandLabel(brand).trim();
-  if (!label) {
+  if (letter === BRAND_ALL_FILTER) {
+    return true;
+  }
+
+  const labels = [brand.brand_name_ar, brand.brand_name_en, brand.id]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+
+  if (!labels.length) {
     return false;
   }
 
-  const firstChar = label[0].toUpperCase();
-
   if (letter === "0") {
-    return /[0-9]/.test(firstChar);
+    return labels.some((label) => /[0-9]/.test(label[0]?.toUpperCase() || ""));
   }
 
   if (letter === "-") {
-    return /[^A-Z0-9\u0600-\u06FF]/.test(firstChar);
+    return labels.some((label) => /[^A-Z0-9\u0600-\u06FF]/.test(label[0]?.toUpperCase() || ""));
   }
 
-  return firstChar === letter;
+  return labels.some((label) => (label[0]?.toUpperCase() || "") === letter);
+}
+
+function brandFilterPath(brand: Brand): string {
+  const label = getBrandLabel(brand);
+  const slug = slugifyProductName(label || "brand") || "brand";
+  return `/products/brand/${encodeURIComponent(brand.id)}/${encodeURIComponent(slug)}`;
 }
 
 export default function ProductsCatalog({
@@ -70,7 +85,7 @@ export default function ProductsCatalog({
   const [draftBrand, setDraftBrand] = useState(initialBrand);
   const [draftBarcode, setDraftBarcode] = useState(initialBarcode);
   const [draftInStockOnly, setDraftInStockOnly] = useState(initialInStockOnly);
-  const [activeBrandLetter, setActiveBrandLetter] = useState("A");
+  const [activeBrandLetter, setActiveBrandLetter] = useState(BRAND_ALL_FILTER);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -175,12 +190,10 @@ export default function ProductsCatalog({
 
   function applyFilters() {
     const query = new URLSearchParams();
+    const selectedBrand = brands.find((brand) => brand.id === draftBrand.trim());
 
     if (draftKeyword.trim()) {
       query.set("keyword", draftKeyword.trim());
-    }
-    if (draftBrand.trim()) {
-      query.set("brand", draftBrand.trim());
     }
     if (draftBarcode.trim()) {
       query.set("barcode", draftBarcode.trim());
@@ -189,7 +202,8 @@ export default function ProductsCatalog({
       query.set("in_stock", "1");
     }
 
-    const href = query.toString() ? `/products?${query.toString()}` : "/products";
+    const basePath = selectedBrand ? brandFilterPath(selectedBrand) : "/products";
+    const href = query.toString() ? `${basePath}?${query.toString()}` : basePath;
     setIsFilterOpen(false);
     router.push(href);
   }
@@ -209,11 +223,9 @@ export default function ProductsCatalog({
     setDraftKeyword(keywordInput);
 
     const query = new URLSearchParams();
+    const selectedBrand = brands.find((brand) => brand.id === initialBrand.trim());
     if (keywordInput.trim()) {
       query.set("keyword", keywordInput.trim());
-    }
-    if (initialBrand.trim()) {
-      query.set("brand", initialBrand.trim());
     }
     if (initialBarcode.trim()) {
       query.set("barcode", initialBarcode.trim());
@@ -222,7 +234,8 @@ export default function ProductsCatalog({
       query.set("in_stock", "1");
     }
 
-    const href = query.toString() ? `/products?${query.toString()}` : "/products";
+    const basePath = selectedBrand ? brandFilterPath(selectedBrand) : "/products";
+    const href = query.toString() ? `${basePath}?${query.toString()}` : basePath;
     router.push(href);
   }
 
@@ -321,7 +334,7 @@ export default function ProductsCatalog({
                       className={`products-letter ${activeBrandLetter === letter ? "active" : ""}`}
                       onClick={() => setActiveBrandLetter(letter)}
                     >
-                      {letter}
+                      {letter === BRAND_ALL_FILTER ? "الكل" : letter}
                     </button>
                   ))}
                 </div>

@@ -20,6 +20,8 @@ async function handleProxy(request: NextRequest, path: string[]) {
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("content-length");
+  headers.delete("accept-encoding");
+  headers.delete("connection");
 
   const body =
     method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();

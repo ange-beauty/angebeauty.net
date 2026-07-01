@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import ProductsCatalog from "@/components/ProductsCatalog";
 import { fetchBrandsServer, fetchProductsServer } from "@/lib/serverApi";
+import { slugifyProductName } from "@/lib/productUrl";
 
 type ProductsSearchParams = {
   keyword?: string;
@@ -34,6 +36,20 @@ export default async function ProductsPage({
     }),
     fetchBrandsServer(),
   ]);
+
+  if (brand) {
+    const selectedBrand = brands.find((item) => item.id === brand);
+    if (selectedBrand) {
+      const label = selectedBrand.brand_name_ar || selectedBrand.brand_name_en || selectedBrand.id;
+      const slug = slugifyProductName(label) || "brand";
+      const query = new URLSearchParams();
+      if (keyword) query.set("keyword", keyword);
+      if (barcode) query.set("barcode", barcode);
+      if (inStockOnly) query.set("in_stock", "1");
+      const href = `/products/brand/${encodeURIComponent(selectedBrand.id)}/${encodeURIComponent(slug)}`;
+      redirect(query.toString() ? `${href}?${query.toString()}` : href);
+    }
+  }
 
   return (
     <ProductsCatalog

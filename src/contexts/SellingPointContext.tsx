@@ -6,6 +6,7 @@ import { getStorageItem, setStorageItem, removeStorageItem } from "@/lib/storage
 import { withClientSourceHeader } from "@/lib/requestHeaders";
 
 const SELECTED_SELLING_POINT_KEY = "selected_selling_point";
+const EMPTY_SELLING_POINTS: SellingPoint[] = [];
 
 
 export interface SellingPoint {
@@ -22,6 +23,7 @@ type SellingPointContextValue = {
   selectedSellingPointId: string;
   setSelectedSellingPointId: (id: string) => Promise<void>;
   isLoadingSellingPoints: boolean;
+  sellingPointsError: string | null;
 };
 
 const SellingPointContext = createContext<SellingPointContextValue | undefined>(undefined);
@@ -41,9 +43,14 @@ export function SellingPointProvider({ children }: { children: React.ReactNode }
         }),
       });
 
-      if (!response.ok) return [];
+      if (!response.ok) {
+        throw new Error(`Selling points request failed with status ${response.status}`);
+      }
+
       const result = await response.json();
-      if (!result || !Array.isArray(result.data)) return [];
+      if (!result || !Array.isArray(result.data)) {
+        throw new Error("Selling points response did not include a data list");
+      }
 
       return result.data
         .filter((point: any) => point && point.id)
@@ -73,8 +80,10 @@ export function SellingPointProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const sellingPoints = sellingPointsQuery.data || [];
+  const sellingPoints = sellingPointsQuery.data || EMPTY_SELLING_POINTS;
   const selectedSellingPoint = sellingPoints.find((point) => point.id === selectedSellingPointId) || null;
+  const sellingPointsError =
+    sellingPointsQuery.error instanceof Error ? sellingPointsQuery.error.message : null;
 
   const value = useMemo(
     () => ({
@@ -83,8 +92,9 @@ export function SellingPointProvider({ children }: { children: React.ReactNode }
       selectedSellingPointId,
       setSelectedSellingPointId: setSelectedSellingPointIdAndPersist,
       isLoadingSellingPoints: sellingPointsQuery.isLoading,
+      sellingPointsError,
     }),
-    [sellingPoints, selectedSellingPoint, selectedSellingPointId, setSelectedSellingPointIdAndPersist, sellingPointsQuery.isLoading],
+    [sellingPoints, selectedSellingPoint, selectedSellingPointId, setSelectedSellingPointIdAndPersist, sellingPointsQuery.isLoading, sellingPointsError],
   );
 
   return <SellingPointContext.Provider value={value}>{children}</SellingPointContext.Provider>;
