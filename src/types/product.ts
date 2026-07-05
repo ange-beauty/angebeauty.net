@@ -16,6 +16,7 @@ export interface Product {
     value?: number;
   } | null;
   image: string;
+  fullImage?: string;
   description: string;
   ingredients?: string[];
   rating: number;
@@ -113,6 +114,17 @@ function buildProductThumbUrl(apiProduct: APIProduct, fileName: string): string 
   return `${baseUrl}?v=${encodeURIComponent(String(stableVersion))}`;
 }
 
+function buildProductImageUrl(apiProduct: APIProduct, fileName: string): string {
+  const baseUrl = `https://images.angebeauty.net/angeapi/cdn/images/${apiProduct.id}/${fileName}`;
+  const stableVersion = apiProduct.aggregate_version ?? apiProduct.last_updated_at;
+
+  if (stableVersion === null || typeof stableVersion === "undefined" || stableVersion === "") {
+    return baseUrl;
+  }
+
+  return `${baseUrl}?v=${encodeURIComponent(String(stableVersion))}`;
+}
+
 export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
   const categoryMap: Record<string, ProductCategory> = {
     skincare: "skincare",
@@ -151,6 +163,7 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
   const brandId = apiProduct.brand_id?.toString() || apiProduct.brand?.toString() || undefined;
 
   let imageUrl = "";
+  let fullImageUrl = "";
   try {
     if (apiProduct.images) {
       let imagesArray: string[] = [];
@@ -163,10 +176,12 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
       const firstImage = imagesArray[0];
       if (firstImage) {
         imageUrl = buildProductThumbUrl(apiProduct, firstImage);
+        fullImageUrl = buildProductImageUrl(apiProduct, firstImage);
       }
     }
   } catch {
     imageUrl = "";
+    fullImageUrl = "";
   }
 
   const parsedBasePrice =
@@ -208,6 +223,7 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
     discountAmount,
     appliedOffer,
     image: imageUrl,
+    fullImage: fullImageUrl || imageUrl,
     description: productDescription,
     ingredients: apiProduct.tags || [],
     rating: 4.5,

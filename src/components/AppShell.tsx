@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useBasket } from "@/contexts/BasketContext";
-import { GridIcon, HomeIcon, PinIcon, ShoppingBagIcon, UserIcon } from "@/components/Icons";
+import { GridIcon, HomeIcon, PinIcon, ShoppingBagIcon, UserIcon, WhatsAppIcon } from "@/components/Icons";
 
 const tabs = [
   { href: "/home", label: "اكتشف", icon: <HomeIcon size={29} /> },
@@ -26,9 +26,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="brand">أنج بيوتي</div>
+        <Link href="/home" className="brand">
+          <img src="/icon.png" alt="" className="brand-icon" />
+          <span>أنج بيوتي</span>
+        </Link>
         <nav className="top-links">
-          <Link href="/contact">تواصل معنا</Link>
+          <a href="https://wa.me/96477061791777" target="_blank" rel="noreferrer" aria-label="تواصل معنا على واتساب">
+            <WhatsAppIcon size={30} />
+          </a>
         </nav>
       </header>
       <main className="app-main">{children}</main>

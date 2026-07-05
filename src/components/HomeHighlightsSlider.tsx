@@ -11,6 +11,7 @@ export type OfferHeroSlide = {
   description: string;
   valueLabel: string;
   href: string;
+  heroImage?: string;
   products: Product[];
 };
 
@@ -90,19 +91,19 @@ export default function HomeHighlightsSlider({ slides }: Props) {
   return (
     <div className="offer-hero-carousel">
       <button type="button" className="offer-arrow offer-arrow-prev" aria-label="السابق" onClick={goPrev}>
-        {"<"}
+        {">"}
       </button>
 
       <div ref={trackRef} className="offer-hero-track" onScroll={handleTrackScroll}>
         {items.map((slide, index) => {
           const heroProduct = slide.products[0];
+          const heroImage = slide.heroImage || heroProduct?.image;
           const supportingProducts = slide.products.slice(1, 4);
 
           return (
             <article key={slide.id} className="offer-hero-slide">
               <Link href={slide.href} className="offer-hero-link">
                 <div className="offer-hero-copy">
-                  <p className="offer-kicker">{slide.badge}</p>
                   <h1>{slide.title}</h1>
                   <p className="offer-title">{slide.description}</p>
                   <div className="offer-price-row">
@@ -115,9 +116,9 @@ export default function HomeHighlightsSlider({ slides }: Props) {
                 <div className="offer-hero-media" aria-hidden="true">
                   <div className="offer-glow offer-glow-one" />
                   <div className="offer-glow offer-glow-two" />
-                  {heroProduct?.image ? (
+                  {heroImage ? (
                     <img
-                      src={heroProduct.image}
+                      src={heroImage}
                       alt=""
                       className="offer-hero-image"
                       loading={activeIndex === index ? "eager" : "lazy"}
@@ -143,7 +144,7 @@ export default function HomeHighlightsSlider({ slides }: Props) {
       </div>
 
       <button type="button" className="offer-arrow offer-arrow-next" aria-label="التالي" onClick={goNext}>
-        {">"}
+        {"<"}
       </button>
 
       <div className="offer-dots">

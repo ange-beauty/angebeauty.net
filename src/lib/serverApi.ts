@@ -38,6 +38,10 @@ export type PublicOffer = {
   description_en?: string | null;
   offer_type?: string | null;
   offer_value?: number | string | null;
+  hero_image?: string | null;
+  aggregate_version?: number | string | null;
+  updated_at?: string | null;
+  last_updated_at?: string | null;
   targets?: PublicOfferTarget[];
   [key: string]: unknown;
 };

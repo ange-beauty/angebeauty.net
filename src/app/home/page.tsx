@@ -32,6 +32,10 @@ function getOfferValueLabel(offer: PublicOffer) {
   return "عرض خاص";
 }
 
+function buildOfferHeroImageUrl(offer: PublicOffer) {
+  return `https://images.angebeauty.net/angeapi/cdn/images/${offer.id}/${offer.id}.webp`;
+}
+
 function normalizeTarget(target: PublicOfferTarget) {
   const type = String(target.target_aggregate_type || target.TargetAggregateType || "")
     .trim()
@@ -108,13 +112,14 @@ export default async function HomePage() {
         description: getOfferDescription(offer),
         valueLabel: getOfferValueLabel(offer),
         href: buildOfferHref(offer, products),
+        heroImage: buildOfferHeroImageUrl(offer),
         products,
       };
     })
   );
 
   const slides = offerSlides.filter((slide): slide is OfferHeroSlide => Boolean(slide))
-    .filter((slide) => slide.products.length > 0);
+    .filter((slide) => slide.products.length > 0 || Boolean(slide.heroImage));
   const heroSlides = slides.length > 0 ? slides : buildFallbackSlides(highlighted);
 
   return (

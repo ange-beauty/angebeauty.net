@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useEffect, useState } from "react";
 import { HeartIcon } from "@/components/Icons";
 import { useBasket } from "@/contexts/BasketContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export default function ProductDetailsView({ product }: Props) {
+  const [isImageOpen, setIsImageOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { addToBasket, getItemQuantity } = useBasket();
   const { selectedSellingPoint } = useSellingPoint();
@@ -30,6 +32,29 @@ export default function ProductDetailsView({ product }: Props) {
     : hasStock
       ? "متوفر في نقطة البيع المختارة."
       : "غير متوفر في نقطة البيع المختارة.";
+  const displayImage =
+    product.image || "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1200&h=1200&fit=crop";
+  const popupImage = product.fullImage || displayImage;
+
+  useEffect(() => {
+    if (!isImageOpen) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsImageOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isImageOpen]);
 
   return (
     <div className="product-detail-page">
@@ -39,11 +64,13 @@ export default function ProductDetailsView({ product }: Props) {
 
       <section className="product-detail-layout">
         <article className="product-media-panel">
-          <img
-            src={product.image || "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1200&h=1200&fit=crop"}
-            alt={product.name}
-            className="product-detail-image"
-          />
+          <button type="button" className="product-detail-image-trigger" onClick={() => setIsImageOpen(true)}>
+            <img
+              src={displayImage}
+              alt={product.name}
+              className="product-detail-image"
+            />
+          </button>
           <button
             type="button"
             className="product-detail-fav-btn"
@@ -101,6 +128,25 @@ export default function ProductDetailsView({ product }: Props) {
           <h2 className="product-description-title">الوصف</h2>
           <div dangerouslySetInnerHTML={{ __html: product.description }} />
         </section>
+      ) : null}
+
+      {isImageOpen ? (
+        <div className="product-image-lightbox" onClick={() => setIsImageOpen(false)}>
+          <button
+            type="button"
+            className="product-image-lightbox-close"
+            aria-label="إغلاق الصورة"
+            onClick={() => setIsImageOpen(false)}
+          >
+            ×
+          </button>
+          <img
+            src={popupImage}
+            alt={product.name}
+            className="product-image-lightbox-img"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
       ) : null}
     </div>
   );
