@@ -7,6 +7,7 @@ type ProductsSearchParams = {
   keyword?: string;
   brand?: string;
   barcode?: string;
+  product?: string;
   in_stock?: string;
 };
 
@@ -24,6 +25,7 @@ export default async function ProductsPage({
   const keyword = (params.keyword || "").trim();
   const brand = (params.brand || "").trim();
   const barcode = (params.barcode || "").trim();
+  const product = (params.product || "").trim();
   const inStockOnly = params.in_stock === "1";
 
   const [productsResponse, brands] = await Promise.all([
@@ -33,6 +35,7 @@ export default async function ProductsPage({
       keyword: keyword || undefined,
       brand: brand || undefined,
       barcode: barcode || undefined,
+      product: product || undefined,
     }),
     fetchBrandsServer(),
   ]);
@@ -45,6 +48,7 @@ export default async function ProductsPage({
       const query = new URLSearchParams();
       if (keyword) query.set("keyword", keyword);
       if (barcode) query.set("barcode", barcode);
+      if (product) query.set("product", product);
       if (inStockOnly) query.set("in_stock", "1");
       const href = `/products/brand/${encodeURIComponent(selectedBrand.id)}/${encodeURIComponent(slug)}`;
       redirect(query.toString() ? `${href}?${query.toString()}` : href);
@@ -58,6 +62,7 @@ export default async function ProductsPage({
       initialKeyword={keyword}
       initialBrand={brand}
       initialBarcode={barcode}
+      initialProduct={product}
       initialInStockOnly={inStockOnly}
       brands={brands}
     />

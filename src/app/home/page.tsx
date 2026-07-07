@@ -73,6 +73,11 @@ async function fetchProductsForOffer(offer: PublicOffer): Promise<Product[]> {
 }
 
 function buildOfferHref(offer: PublicOffer, products: Product[]) {
+  const productTarget = (offer.targets || []).map(normalizeTarget).find((target) => target.type === "product" && target.id);
+  if (productTarget) {
+    return `/products?product=${encodeURIComponent(productTarget.id)}`;
+  }
+
   const brandId = products.find((product) => product.brandId)?.brandId;
   if (brandId) {
     const brandName = products.find((product) => product.brandId === brandId)?.brand || getOfferName(offer);

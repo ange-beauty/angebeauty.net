@@ -22,6 +22,7 @@ export interface FetchProductsParams {
   category?: string;
   brand?: string;
   barcode?: string;
+  product?: string;
   highlighted?: number | boolean;
 }
 
@@ -32,7 +33,7 @@ export interface FetchProductsResponse {
 }
 
 export async function fetchProducts(params: FetchProductsParams = {}): Promise<FetchProductsResponse> {
-  const { page = 1, limit = 10, keyword, category, brand, barcode, highlighted } = params;
+  const { page = 1, limit = 10, keyword, category, brand, barcode, product, highlighted } = params;
 
   try {
     const queryParams = new URLSearchParams();
@@ -45,6 +46,7 @@ export async function fetchProducts(params: FetchProductsParams = {}): Promise<F
     if (category) queryParams.append("category", category);
     if (brand) queryParams.append("brand", brand);
     if (barcode) queryParams.append("barcode", barcode);
+    if (product) queryParams.append("product", product);
     if (typeof highlighted !== "undefined") queryParams.append("highlighted", highlighted ? "1" : "0");
 
     const response = await fetch(`/api/v1/products?${queryParams.toString()}`, {

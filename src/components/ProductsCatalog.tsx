@@ -16,6 +16,7 @@ type Props = {
   initialKeyword: string;
   initialBrand: string;
   initialBarcode: string;
+  initialProduct: string;
   initialInStockOnly: boolean;
   brands: Brand[];
 };
@@ -69,6 +70,7 @@ export default function ProductsCatalog({
   initialKeyword,
   initialBrand,
   initialBarcode,
+  initialProduct,
   initialInStockOnly,
   brands,
 }: Props) {
@@ -153,6 +155,7 @@ export default function ProductsCatalog({
         keyword: initialKeyword || undefined,
         brand: initialBrand || undefined,
         barcode: initialBarcode || undefined,
+        product: initialProduct || undefined,
       });
 
       if (cancelled) {
@@ -186,7 +189,7 @@ export default function ProductsCatalog({
     return () => {
       cancelled = true;
     };
-  }, [initialBarcode, initialBrand, initialKeyword, isLoadingMore, page]);
+  }, [initialBarcode, initialBrand, initialKeyword, initialProduct, isLoadingMore, page]);
 
   function applyFilters() {
     const query = new URLSearchParams();
@@ -197,6 +200,9 @@ export default function ProductsCatalog({
     }
     if (draftBarcode.trim()) {
       query.set("barcode", draftBarcode.trim());
+    }
+    if (initialProduct.trim()) {
+      query.set("product", initialProduct.trim());
     }
     if (draftInStockOnly && selectedSellingPoint?.id) {
       query.set("in_stock", "1");
@@ -230,6 +236,9 @@ export default function ProductsCatalog({
     if (initialBarcode.trim()) {
       query.set("barcode", initialBarcode.trim());
     }
+    if (initialProduct.trim()) {
+      query.set("product", initialProduct.trim());
+    }
     if (initialInStockOnly && selectedSellingPoint?.id) {
       query.set("in_stock", "1");
     }
@@ -239,7 +248,7 @@ export default function ProductsCatalog({
     router.push(href);
   }
 
-  const hasActiveFilters = Boolean(initialBrand || initialBarcode || initialInStockOnly);
+  const hasActiveFilters = Boolean(initialBrand || initialBarcode || initialProduct || initialInStockOnly);
 
   return (
     <div style={{ display: "grid", gap: 14 }}>

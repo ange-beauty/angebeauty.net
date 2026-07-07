@@ -15,6 +15,7 @@ export type ServerFetchProductsParams = {
   brand?: string;
   tag?: string;
   barcode?: string;
+  product?: string;
   highlighted?: number | boolean;
 };
 
@@ -61,7 +62,7 @@ async function serverFetch(path: string, init?: RequestInit) {
 export async function fetchProductsServer(
   params: ServerFetchProductsParams = {},
 ): Promise<ServerFetchProductsResponse> {
-  const { page = 1, limit = 20, keyword, category, brand, tag, barcode, highlighted } = params;
+  const { page = 1, limit = 20, keyword, category, brand, tag, barcode, product, highlighted } = params;
   const queryParams = new URLSearchParams();
   queryParams.append("page", page.toString());
   queryParams.append("limit", limit.toString());
@@ -72,6 +73,7 @@ export async function fetchProductsServer(
   if (brand) queryParams.append("brand", brand);
   if (tag) queryParams.append("tag", tag);
   if (barcode) queryParams.append("barcode", barcode);
+  if (product) queryParams.append("product", product);
   if (typeof highlighted !== "undefined") {
     queryParams.append("highlighted", highlighted ? "1" : "0");
   }

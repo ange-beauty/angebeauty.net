@@ -11,6 +11,7 @@ type ProductsFilterParams = {
 type ProductsSearchParams = {
   keyword?: string;
   barcode?: string;
+  product?: string;
   in_stock?: string;
 };
 
@@ -51,6 +52,7 @@ export default async function ProductsFilterPage({
 
   const keyword = (resolvedSearchParams.keyword || "").trim();
   const barcode = (resolvedSearchParams.barcode || "").trim();
+  const product = (resolvedSearchParams.product || "").trim();
   const inStockOnly = resolvedSearchParams.in_stock === "1";
 
   const [productsResponse, brands] = await Promise.all([
@@ -60,6 +62,7 @@ export default async function ProductsFilterPage({
       keyword: keyword || undefined,
       brand: id,
       barcode: barcode || undefined,
+      product: product || undefined,
     }),
     fetchBrandsServer(),
   ]);
@@ -71,6 +74,7 @@ export default async function ProductsFilterPage({
       initialKeyword={keyword}
       initialBrand={id}
       initialBarcode={barcode}
+      initialProduct={product}
       initialInStockOnly={inStockOnly}
       brands={brands}
     />
