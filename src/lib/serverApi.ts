@@ -40,6 +40,7 @@ export type PublicOffer = {
   offer_type?: string | null;
   offer_value?: number | string | null;
   hero_image?: string | null;
+  hide_text?: boolean | number | string | null;
   aggregate_version?: number | string | null;
   updated_at?: string | null;
   last_updated_at?: string | null;

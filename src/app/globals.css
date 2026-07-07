@@ -230,6 +230,10 @@ a {
   pointer-events: none;
 }
 
+.offer-hero-image-only::after {
+  display: none;
+}
+
 .offer-hero-copy {
   position: relative;
   z-index: 2;
