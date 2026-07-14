@@ -1,4 +1,4 @@
-import { mapAPIProductToProduct, type Product } from "@/types/product";
+import { mapAPIProductToProduct, type APIProduct, type Product } from "@/types/product";
 import { withClientSourceHeader } from "@/lib/requestHeaders";
 
 const API_BASE_URL =
@@ -48,7 +48,78 @@ export type PublicOffer = {
   [key: string]: unknown;
 };
 
-async function serverFetch(path: string, init?: RequestInit) {
+export type CompetitionParticipant = {
+  participant_key?: string | null;
+  display_name?: string | null;
+  instagram_username?: string | null;
+  score?: number | string | null;
+  rank?: number | string | null;
+  comment_count?: number | string | null;
+  mention_count?: number | string | null;
+  unique_mention_count?: number | string | null;
+  first_mention_at?: string | null;
+  [key: string]: unknown;
+};
+
+export type CompetitionAwardProduct = {
+  product_id?: string | null;
+  productId?: string | null;
+  quantity?: number | string | null;
+  product?: APIProduct | null;
+  [key: string]: unknown;
+};
+
+export type CompetitionAward = {
+  rank?: number | string | null;
+  products?: CompetitionAwardProduct[] | null;
+  [key: string]: unknown;
+};
+
+export type CompetitionWinner = CompetitionParticipant & {
+  awarded_products?: CompetitionAwardProduct[] | null;
+};
+
+export type CompetitionSnapshot = {
+  competition_id?: string | null;
+  competition_type?: string | null;
+  name_ar?: string | null;
+  name_en?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  state?: string | null;
+  status?: string | null;
+  is_final?: boolean | number | string | null;
+  evaluated_at?: string | null;
+  snapshot_updated_at?: string | null;
+  snapshot_refresh_status?: string | null;
+  ranking?: CompetitionParticipant[] | null;
+  suggested_winners?: CompetitionWinner[] | null;
+  winners?: CompetitionWinner[] | null;
+  awards?: CompetitionAward[] | null;
+  prize_products?: APIProduct[] | null;
+  metadata?: {
+    winner_count?: number | string | null;
+    participant_count?: number | string | null;
+    comment_count?: number | string | null;
+    mention_count?: number | string | null;
+    suggested_winners?: CompetitionWinner[] | null;
+    awards?: CompetitionAward[] | null;
+    mention_comments?: Array<{
+      instagram_username?: string | null;
+      display_name?: string | null;
+      text?: string | null;
+      score_delta?: number | string | null;
+      mentions?: string[] | null;
+      unique_mentions?: string[] | null;
+      timestamp?: string | null;
+      [key: string]: unknown;
+    }> | null;
+    [key: string]: unknown;
+  } | null;
+  [key: string]: unknown;
+};
+
+async function serverFetch(path: string, init?: RequestInit & { next?: { revalidate?: number } }) {
   return fetch(`${API_BASE}${path}`, {
     ...init,
     headers: withClientSourceHeader({
@@ -56,7 +127,7 @@ async function serverFetch(path: string, init?: RequestInit) {
       "Content-Type": "application/json",
       ...((init?.headers || {}) as Record<string, string>),
     }),
-    next: { revalidate: 300 },
+    next: init?.next ?? { revalidate: 300 },
   });
 }
 
@@ -112,6 +183,37 @@ export async function fetchProductsServer(
   } catch {
     return { products: [], hasMore: false, totalRows: 0 };
   }
+}
+
+export async function fetchCompetitionSnapshotServer(id: string): Promise<CompetitionSnapshot | null> {
+  if (!id) return null;
+  try {
+    const response = await serverFetch(`/api/v1/competitions/${encodeURIComponent(id)}/ranking`, {
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) return null;
+    const result = await response.json();
+    if (!result || result.success !== true || !result.data) return null;
+    return result.data as CompetitionSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchProductsByIdsServer(ids: string[]): Promise<Product[]> {
+  const uniqueIds = Array.from(new Set(ids.map((id) => id.trim()).filter(Boolean)));
+  if (uniqueIds.length === 0) return [];
+
+  const products = await Promise.all(uniqueIds.map((id) => fetchProductByIdServer(id)));
+  return products.filter((product): product is Product => Boolean(product?.id));
+}
+
+export function mapCompetitionSnapshotProducts(snapshot: CompetitionSnapshot | null): Product[] {
+  if (!Array.isArray(snapshot?.prize_products)) return [];
+
+  return snapshot.prize_products
+    .map((product) => mapAPIProductToProduct(product))
+    .filter((product) => product && product.id);
 }
 
 export async function fetchPublicOffersServer(): Promise<PublicOffer[]> {
