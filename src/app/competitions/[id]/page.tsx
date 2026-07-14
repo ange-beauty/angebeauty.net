@@ -17,6 +17,7 @@ type PageProps = {
 };
 
 export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
@@ -91,7 +92,7 @@ export default async function CompetitionPage({ params }: PageProps) {
         {prizeProducts.length > 0 ? (
           <div className="grid-products competition-prize-grid">
             {prizeProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} hidePrice />
             ))}
           </div>
         ) : (
@@ -125,7 +126,7 @@ export default async function CompetitionPage({ params }: PageProps) {
       <section className="competition-section">
         <div className="competition-section-header">
           <h2>باقي المشاركين</h2>
-          <p>يمكن للزوار فتح حسابات المشاركين على إنستغرام من القائمة.</p>
+          <p>ترتيب باقي المشاركين حسب لقطة التقييم الحالية.</p>
         </div>
         {otherCommenters.length > 0 ? (
           <div className="competition-commenters">
@@ -181,7 +182,6 @@ function ParticipantRow({
   const username = instagramUsername(participant);
   const score = readNumber(participant.score);
   const rank = readNumber(participant.rank);
-  const href = username ? `https://www.instagram.com/${encodeURIComponent(username)}/` : "";
   const products = winnerProductNames(participant);
 
   return (
@@ -196,11 +196,6 @@ function ParticipantRow({
           </div>
         ) : null}
       </div>
-      {href ? (
-        <a href={href} target="_blank" rel="noreferrer" className="competition-profile-link">
-          زيارة الحساب
-        </a>
-      ) : null}
     </article>
   );
 }

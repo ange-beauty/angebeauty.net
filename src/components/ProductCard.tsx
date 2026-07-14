@@ -13,9 +13,10 @@ import { productHref } from "@/lib/productUrl";
 
 type Props = {
   product: Product;
+  hidePrice?: boolean;
 };
 
-export default function ProductCard({ product }: Props) {
+export default function ProductCard({ product, hidePrice = false }: Props) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { addToBasket, getItemQuantity } = useBasket();
   const { selectedSellingPoint } = useSellingPoint();
@@ -52,10 +53,12 @@ export default function ProductCard({ product }: Props) {
           <h3 className="product-name">{product.name}</h3>
         </Link>
         <div className="product-footer">
-          <div className="product-price-stack">
-            {hasDiscount ? <p className="product-old-price">{formatPrice(product.basePrice!)}</p> : null}
-            <p className={`product-price ${hasDiscount ? "discounted" : ""}`}>{formatPrice(product.price)}</p>
-          </div>
+          {!hidePrice ? (
+            <div className="product-price-stack">
+              {hasDiscount ? <p className="product-old-price">{formatPrice(product.basePrice!)}</p> : null}
+              <p className={`product-price ${hasDiscount ? "discounted" : ""}`}>{formatPrice(product.price)}</p>
+            </div>
+          ) : <span />}
           <button
             className="product-basket-btn"
             aria-label="add to basket"

@@ -119,7 +119,7 @@ export type CompetitionSnapshot = {
   [key: string]: unknown;
 };
 
-async function serverFetch(path: string, init?: RequestInit & { next?: { revalidate?: number } }) {
+async function serverFetch(path: string, init?: RequestInit & { next?: { revalidate?: number }; cache?: RequestCache }) {
   return fetch(`${API_BASE}${path}`, {
     ...init,
     headers: withClientSourceHeader({
@@ -127,7 +127,7 @@ async function serverFetch(path: string, init?: RequestInit & { next?: { revalid
       "Content-Type": "application/json",
       ...((init?.headers || {}) as Record<string, string>),
     }),
-    next: init?.next ?? { revalidate: 300 },
+    ...(init?.cache ? {} : { next: init?.next ?? { revalidate: 300 } }),
   });
 }
 
@@ -189,7 +189,7 @@ export async function fetchCompetitionSnapshotServer(id: string): Promise<Compet
   if (!id) return null;
   try {
     const response = await serverFetch(`/api/v1/competitions/${encodeURIComponent(id)}/ranking`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!response.ok) return null;
     const result = await response.json();
