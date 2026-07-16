@@ -3,17 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import TurnstileWidget from "@/components/TurnstileWidget";
-import { ClipboardIcon, HeartIcon, PinIcon, UserIcon } from "@/components/Icons";
+import { ClipboardIcon, HeartIcon, UserIcon } from "@/components/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBasket } from "@/contexts/BasketContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { useSellingPoint } from "@/contexts/SellingPointContext";
 
 export default function AccountPage() {
   const { user, isLoading, isAuthenticated, login, logout, resendEmailVerification } = useAuth();
   const { totalItems } = useBasket();
   const { favorites } = useFavorites();
-  const { selectedSellingPoint } = useSellingPoint();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,15 +87,6 @@ export default function AccountPage() {
               <span className="account-menu-trailing"><HeartIcon size={18} strokeWidth={1.8} /></span>
             </div>
 
-            <Link href="/store" className="account-menu-item">
-              <span className="account-menu-leading"><PinIcon size={18} strokeWidth={1.8} /></span>
-              <div className="account-menu-text">
-                <p className="account-menu-title">متجري المفضل</p>
-                <p className="account-menu-subtitle">{selectedSellingPoint?.name_ar || "اختر نقطة البيع"}</p>
-              </div>
-              <span className="account-menu-trailing"><HeartIcon size={18} strokeWidth={1.8} /></span>
-            </Link>
-
             <Link href="/favorites" className="account-menu-item">
               <span className="account-menu-leading"><HeartIcon size={18} strokeWidth={1.8} /></span>
               <div className="account-menu-text">
@@ -133,8 +122,10 @@ export default function AccountPage() {
           ) : null}
         </>
       ) : (
-        <section className="card account-login-card">
-          <h1 className="page-title">تسجيل الدخول</h1>
+        <section className="card account-login-card account-login-centered">
+          <img src="/icon.png" alt="أنج بيوتي" className="account-login-logo" />
+          <h1 className="page-title">أنج بيوتي</h1>
+          <p className="account-login-motto">أنج بيوتي جمال ملائكي</p>
 
           <input className="input" placeholder="البريد الإلكتروني" value={email} onChange={(event) => setEmail(event.target.value)} />
           {fieldErrors.email ? <p className="error">{fieldErrors.email}</p> : null}

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import ProductsCatalog from "@/components/ProductsCatalog";
-import { fetchBrandsServer, fetchProductsServer } from "@/lib/serverApi";
+import { fetchBrandsServer, fetchCategoriesServer, fetchProductsServer } from "@/lib/serverApi";
 
 type ProductsFilterParams = {
   filterName?: string;
@@ -12,7 +12,8 @@ type ProductsSearchParams = {
   keyword?: string;
   barcode?: string;
   product?: string;
-  in_stock?: string;
+  category?: string;
+  focusSearch?: string;
 };
 
 export async function generateMetadata({
@@ -29,7 +30,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: name ? `${name} | Ange Beauty` : "Ange Beauty products",
+    title: name ? `${name} | أنج بيوتي` : "منتجات أنج بيوتي",
     description: name ? `تصفح منتجات ${name} في أنج بيوتي.` : "تصفح منتجات أنج بيوتي.",
   };
 }
@@ -53,9 +54,10 @@ export default async function ProductsFilterPage({
   const keyword = (resolvedSearchParams.keyword || "").trim();
   const barcode = (resolvedSearchParams.barcode || "").trim();
   const product = (resolvedSearchParams.product || "").trim();
-  const inStockOnly = resolvedSearchParams.in_stock === "1";
+  const category = (resolvedSearchParams.category || "").trim();
+  const focusSearch = resolvedSearchParams.focusSearch === "1";
 
-  const [productsResponse, brands] = await Promise.all([
+  const [productsResponse, brands, categories] = await Promise.all([
     fetchProductsServer({
       page: 1,
       limit: 10,
@@ -63,8 +65,10 @@ export default async function ProductsFilterPage({
       brand: id,
       barcode: barcode || undefined,
       product: product || undefined,
+      category: category || undefined,
     }),
     fetchBrandsServer(),
+    fetchCategoriesServer(),
   ]);
 
   return (
@@ -75,8 +79,10 @@ export default async function ProductsFilterPage({
       initialBrand={id}
       initialBarcode={barcode}
       initialProduct={product}
-      initialInStockOnly={inStockOnly}
+      initialCategory={category}
+      initialFocusSearch={focusSearch}
       brands={brands}
+      categories={categories}
     />
   );
 }

@@ -54,6 +54,33 @@ export function GridIcon({ size = 18, color = "currentColor", strokeWidth = 2 }:
   );
 }
 
+export function PackageIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m12 3 8 4.4v9.2L12 21l-8-4.4V7.4L12 3Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <path d="m4.5 7.7 7.5 4.1 7.5-4.1M12 12v8.4" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function TagIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20.5 13.2 13.2 20.5a2.2 2.2 0 0 1-3.1 0L3.5 13.9V4h9.9l7.1 7.1a1.5 1.5 0 0 1 0 2.1Z" stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+      <circle cx="8" cy="8" r="1.4" stroke={color} strokeWidth={strokeWidth} />
+    </svg>
+  );
+}
+
+export function BellIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8.8h18C21 16 18 16 18 9Z" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 21a2.3 2.3 0 0 0 4 0" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function PinIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">

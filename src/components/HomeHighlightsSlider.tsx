@@ -50,7 +50,7 @@ export default function HomeHighlightsSlider({ slides }: Props) {
       });
       setActiveIndex(safeIndex);
     },
-    [getStep, items.length]
+    [getStep, items.length],
   );
 
   useEffect(() => {
@@ -60,20 +60,15 @@ export default function HomeHighlightsSlider({ slides }: Props) {
 
   useEffect(() => {
     if (items.length < 2) return;
-
     const timer = window.setInterval(() => {
       scrollToIndex(activeIndex + 1);
     }, 4500);
-
     return () => window.clearInterval(timer);
   }, [activeIndex, items.length, scrollToIndex]);
 
   if (!items.length) {
     return null;
   }
-
-  const goPrev = () => scrollToIndex(activeIndex - 1);
-  const goNext = () => scrollToIndex(activeIndex + 1);
 
   const handleTrackScroll = () => {
     const track = trackRef.current;
@@ -83,42 +78,35 @@ export default function HomeHighlightsSlider({ slides }: Props) {
 
     const index = Math.round(track.scrollLeft / step);
     const boundedIndex = Math.min(Math.max(index, 0), items.length - 1);
-
-    if (boundedIndex !== activeIndex) {
-      setActiveIndex(boundedIndex);
-    }
+    if (boundedIndex !== activeIndex) setActiveIndex(boundedIndex);
   };
 
   return (
     <div className="offer-hero-carousel">
-      <button type="button" className="offer-arrow offer-arrow-prev" aria-label="السابق" onClick={goPrev}>
+      <button type="button" className="offer-arrow offer-arrow-prev" aria-label="السابق" onClick={() => scrollToIndex(activeIndex - 1)}>
         {">"}
       </button>
 
       <div ref={trackRef} className="offer-hero-track" onScroll={handleTrackScroll}>
         {items.map((slide, index) => {
-          const heroProduct = slide.products[0];
-          const heroImage = slide.heroImage || heroProduct?.image;
-          const supportingProducts = slide.hideText ? [] : slide.products.slice(1, 4);
+          const heroImage = slide.heroImage || slide.products[0]?.image;
 
           return (
             <article key={slide.id} className="offer-hero-slide">
               <Link href={slide.href} className={`offer-hero-link ${slide.hideText ? "offer-hero-image-only" : ""}`}>
                 {!slide.hideText ? (
-                <div className="offer-hero-copy">
-                  <h1>{slide.title}</h1>
-                  <p className="offer-title">{slide.description}</p>
-                  <div className="offer-price-row">
-                    <span>العرض</span>
-                    <strong>{slide.valueLabel}</strong>
+                  <div className="offer-hero-copy">
+                    <h1>{slide.title}</h1>
+                    <p className="offer-title">{slide.description}</p>
+                    <div className="offer-price-row">
+                      <span>العرض</span>
+                      <strong>{slide.valueLabel}</strong>
+                    </div>
+                    <span className="offer-cta">تسوقي العرض</span>
                   </div>
-                  <span className="offer-cta">تسوقي العرض</span>
-                </div>
                 ) : null}
 
                 <div className="offer-hero-media" aria-hidden="true">
-                  <div className="offer-glow offer-glow-one" />
-                  <div className="offer-glow offer-glow-two" />
                   {heroImage ? (
                     <img
                       src={heroImage}
@@ -130,15 +118,6 @@ export default function HomeHighlightsSlider({ slides }: Props) {
                   ) : (
                     <div className="offer-visual-fallback">{slide.title.slice(0, 2)}</div>
                   )}
-                  {supportingProducts.length > 0 ? (
-                    <div className="offer-product-thumbs">
-                      {supportingProducts.map((product) =>
-                        product.image ? (
-                          <img key={product.id} src={product.image} alt="" loading="lazy" decoding="async" />
-                        ) : null
-                      )}
-                    </div>
-                  ) : null}
                 </div>
               </Link>
             </article>
@@ -146,7 +125,7 @@ export default function HomeHighlightsSlider({ slides }: Props) {
         })}
       </div>
 
-      <button type="button" className="offer-arrow offer-arrow-next" aria-label="التالي" onClick={goNext}>
+      <button type="button" className="offer-arrow offer-arrow-next" aria-label="التالي" onClick={() => scrollToIndex(activeIndex + 1)}>
         {"<"}
       </button>
 

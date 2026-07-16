@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import ProductsCatalog from "@/components/ProductsCatalog";
-import { fetchBrandsServer, fetchProductsServer } from "@/lib/serverApi";
+import { fetchBrandsServer, fetchCategoriesServer, fetchProductsServer } from "@/lib/serverApi";
 import { slugifyProductName } from "@/lib/productUrl";
 
 type ProductsSearchParams = {
@@ -8,12 +8,13 @@ type ProductsSearchParams = {
   brand?: string;
   barcode?: string;
   product?: string;
-  in_stock?: string;
+  category?: string;
+  focusSearch?: string;
 };
 
 export const metadata = {
   title: "أنج بيوتي | المنتجات",
-  description: "تصفح منتجات أنج بيوتي مع البحث والتصفية حسب العلامة التجارية.",
+  description: "تصفح منتجات أنج بيوتي مع البحث والتصفية حسب العلامة التجارية والفئة.",
 };
 
 export default async function ProductsPage({
@@ -26,9 +27,10 @@ export default async function ProductsPage({
   const brand = (params.brand || "").trim();
   const barcode = (params.barcode || "").trim();
   const product = (params.product || "").trim();
-  const inStockOnly = params.in_stock === "1";
+  const category = (params.category || "").trim();
+  const focusSearch = params.focusSearch === "1";
 
-  const [productsResponse, brands] = await Promise.all([
+  const [productsResponse, brands, categories] = await Promise.all([
     fetchProductsServer({
       page: 1,
       limit: 10,
@@ -36,8 +38,10 @@ export default async function ProductsPage({
       brand: brand || undefined,
       barcode: barcode || undefined,
       product: product || undefined,
+      category: category || undefined,
     }),
     fetchBrandsServer(),
+    fetchCategoriesServer(),
   ]);
 
   if (brand) {
@@ -49,7 +53,8 @@ export default async function ProductsPage({
       if (keyword) query.set("keyword", keyword);
       if (barcode) query.set("barcode", barcode);
       if (product) query.set("product", product);
-      if (inStockOnly) query.set("in_stock", "1");
+      if (category) query.set("category", category);
+      if (params.focusSearch) query.set("focusSearch", params.focusSearch);
       const href = `/products/brand/${encodeURIComponent(selectedBrand.id)}/${encodeURIComponent(slug)}`;
       redirect(query.toString() ? `${href}?${query.toString()}` : href);
     }
@@ -63,8 +68,10 @@ export default async function ProductsPage({
       initialBrand={brand}
       initialBarcode={barcode}
       initialProduct={product}
-      initialInStockOnly={inStockOnly}
+      initialCategory={category}
+      initialFocusSearch={focusSearch}
       brands={brands}
+      categories={categories}
     />
   );
 }

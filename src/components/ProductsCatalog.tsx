@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { CloseIcon, FilterIcon, SearchIcon } from "@/components/Icons";
-import { useSellingPoint } from "@/contexts/SellingPointContext";
-import { fetchProducts, type Brand } from "@/lib/api";
-import { getAvailableQuantityForSellingPoint } from "@/lib/availability";
+import { fetchProducts, type Brand, type Category } from "@/lib/api";
 import { slugifyProductName } from "@/lib/productUrl";
 import type { Product } from "@/types/product";
 
@@ -17,44 +15,32 @@ type Props = {
   initialBrand: string;
   initialBarcode: string;
   initialProduct: string;
-  initialInStockOnly: boolean;
+  initialCategory: string;
+  initialFocusSearch: boolean;
   brands: Brand[];
+  categories: Category[];
 };
 
 const BRAND_ALL_FILTER = "ALL";
-
 const BRAND_LETTERS = [
   BRAND_ALL_FILTER,
   "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
   "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-  "0", "-", "9",
 ];
 
 function getBrandLabel(brand: Brand): string {
   return brand.brand_name_ar || brand.brand_name_en || brand.id;
 }
 
-function startsWithLetter(brand: Brand, letter: string): boolean {
-  if (letter === BRAND_ALL_FILTER) {
-    return true;
-  }
+function getCategoryLabel(category: Category): string {
+  return category.category_name_ar || category.category_name_en || category.id;
+}
 
-  const labels = [brand.brand_name_ar, brand.brand_name_en, brand.id]
+function startsWithLetter(brand: Brand, letter: string): boolean {
+  if (letter === BRAND_ALL_FILTER) return true;
+  const labels = [brand.brand_name_en, brand.brand_name_ar, brand.id]
     .map((value) => String(value || "").trim())
     .filter(Boolean);
-
-  if (!labels.length) {
-    return false;
-  }
-
-  if (letter === "0") {
-    return labels.some((label) => /[0-9]/.test(label[0]?.toUpperCase() || ""));
-  }
-
-  if (letter === "-") {
-    return labels.some((label) => /[^A-Z0-9\u0600-\u06FF]/.test(label[0]?.toUpperCase() || ""));
-  }
-
   return labels.some((label) => (label[0]?.toUpperCase() || "") === letter);
 }
 
@@ -71,11 +57,14 @@ export default function ProductsCatalog({
   initialBrand,
   initialBarcode,
   initialProduct,
-  initialInStockOnly,
+  initialCategory,
+  initialFocusSearch,
   brands,
+  categories,
 }: Props) {
   const router = useRouter();
-  const { selectedSellingPoint } = useSellingPoint();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [products, setProducts] = useState(initialProducts);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -86,9 +75,10 @@ export default function ProductsCatalog({
   const [draftKeyword, setDraftKeyword] = useState(initialKeyword);
   const [draftBrand, setDraftBrand] = useState(initialBrand);
   const [draftBarcode, setDraftBarcode] = useState(initialBarcode);
-  const [draftInStockOnly, setDraftInStockOnly] = useState(initialInStockOnly);
+  const [draftCategories, setDraftCategories] = useState<string[]>(
+    initialCategory.split(",").map((item) => item.trim()).filter(Boolean),
+  );
   const [activeBrandLetter, setActiveBrandLetter] = useState(BRAND_ALL_FILTER);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -100,51 +90,58 @@ export default function ProductsCatalog({
     setDraftKeyword(initialKeyword);
     setDraftBrand(initialBrand);
     setDraftBarcode(initialBarcode);
-    setDraftInStockOnly(initialInStockOnly);
-  }, [initialBarcode, initialBrand, initialHasMore, initialInStockOnly, initialKeyword, initialProducts]);
+    setDraftCategories(initialCategory.split(",").map((item) => item.trim()).filter(Boolean));
+  }, [initialBarcode, initialBrand, initialCategory, initialHasMore, initialKeyword, initialProducts]);
+
+  useEffect(() => {
+    if (initialFocusSearch) {
+      inputRef.current?.focus();
+    }
+  }, [initialFocusSearch]);
 
   const filteredBrands = useMemo(
     () => brands.filter((brand) => startsWithLetter(brand, activeBrandLetter)),
     [activeBrandLetter, brands],
   );
 
-  const visibleProducts =
-    draftInStockOnly && selectedSellingPoint?.id
-      ? products.filter((product) => {
-          const available = getAvailableQuantityForSellingPoint(product, selectedSellingPoint.id);
-          return available === null || available > 0;
-        })
-      : products;
+  const rootCategories = useMemo(
+    () => {
+      const ids = new Set(categories.map((category) => category.id));
+      return categories.filter((category) => !category.parent_category || !ids.has(category.parent_category));
+    },
+    [categories],
+  );
+
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, Category[]>();
+    const ids = new Set(categories.map((category) => category.id));
+    categories.forEach((category) => {
+      if (!category.parent_category || !ids.has(category.parent_category)) return;
+      const current = map.get(category.parent_category) || [];
+      current.push(category);
+      map.set(category.parent_category, current);
+    });
+    return map;
+  }, [categories]);
 
   useEffect(() => {
-    if (!hasMore || isLoadingMore) {
-      return;
-    }
-
+    if (!hasMore || isLoadingMore) return;
     const node = sentinelRef.current;
-    if (!node) {
-      return;
-    }
+    if (!node) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setIsLoadingMore(true);
-        }
+        if (entries[0]?.isIntersecting) setIsLoadingMore(true);
       },
       { rootMargin: "320px 0px" },
     );
 
     observer.observe(node);
-
     return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, visibleProducts.length]);
+  }, [hasMore, isLoadingMore, products.length]);
 
   useEffect(() => {
-    if (!isLoadingMore) {
-      return;
-    }
-
+    if (!isLoadingMore) return;
     let cancelled = false;
 
     async function loadNextPage() {
@@ -156,12 +153,10 @@ export default function ProductsCatalog({
         brand: initialBrand || undefined,
         barcode: initialBarcode || undefined,
         product: initialProduct || undefined,
+        category: initialCategory || undefined,
       });
 
-      if (cancelled) {
-        return;
-      }
-
+      if (cancelled) return;
       if (!response.products.length && response.hasMore) {
         setLoadError("تعذر تحميل المزيد من المنتجات.");
         setIsLoadingMore(false);
@@ -170,8 +165,7 @@ export default function ProductsCatalog({
 
       setProducts((current) => {
         const seen = new Set(current.map((item) => item.id));
-        const incoming = response.products.filter((item) => !seen.has(item.id));
-        return [...current, ...incoming];
+        return [...current, ...response.products.filter((item) => !seen.has(item.id))];
       });
       setPage(nextPage);
       setHasMore(response.hasMore);
@@ -189,36 +183,42 @@ export default function ProductsCatalog({
     return () => {
       cancelled = true;
     };
-  }, [initialBarcode, initialBrand, initialKeyword, initialProduct, isLoadingMore, page]);
+  }, [initialBarcode, initialBrand, initialCategory, initialKeyword, initialProduct, isLoadingMore, page]);
+
+  function pushProductsRoute(next: {
+    keyword?: string;
+    barcode?: string;
+    brand?: string;
+    product?: string;
+    category?: string;
+  }) {
+    const query = new URLSearchParams();
+    if (next.keyword?.trim()) query.set("keyword", next.keyword.trim());
+    if (next.barcode?.trim()) query.set("barcode", next.barcode.trim());
+    if (next.product?.trim()) query.set("product", next.product.trim());
+    if (next.category?.trim()) query.set("category", next.category.trim());
+
+    const selectedBrand = brands.find((brand) => brand.id === next.brand?.trim());
+    const basePath = selectedBrand ? brandFilterPath(selectedBrand) : "/products";
+    router.push(query.toString() ? `${basePath}?${query.toString()}` : basePath);
+  }
 
   function applyFilters() {
-    const query = new URLSearchParams();
-    const selectedBrand = brands.find((brand) => brand.id === draftBrand.trim());
-
-    if (draftKeyword.trim()) {
-      query.set("keyword", draftKeyword.trim());
-    }
-    if (draftBarcode.trim()) {
-      query.set("barcode", draftBarcode.trim());
-    }
-    if (initialProduct.trim()) {
-      query.set("product", initialProduct.trim());
-    }
-    if (draftInStockOnly && selectedSellingPoint?.id) {
-      query.set("in_stock", "1");
-    }
-
-    const basePath = selectedBrand ? brandFilterPath(selectedBrand) : "/products";
-    const href = query.toString() ? `${basePath}?${query.toString()}` : basePath;
     setIsFilterOpen(false);
-    router.push(href);
+    pushProductsRoute({
+      keyword: draftKeyword,
+      barcode: draftBarcode,
+      brand: draftBrand,
+      product: initialProduct,
+      category: draftCategories.join(","),
+    });
   }
 
   function resetFilters() {
     setDraftKeyword("");
     setDraftBrand("");
     setDraftBarcode("");
-    setDraftInStockOnly(false);
+    setDraftCategories([]);
     setKeywordInput("");
     setIsFilterOpen(false);
     router.push("/products");
@@ -227,41 +227,91 @@ export default function ProductsCatalog({
   function submitSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setDraftKeyword(keywordInput);
-
-    const query = new URLSearchParams();
-    const selectedBrand = brands.find((brand) => brand.id === initialBrand.trim());
-    if (keywordInput.trim()) {
-      query.set("keyword", keywordInput.trim());
-    }
-    if (initialBarcode.trim()) {
-      query.set("barcode", initialBarcode.trim());
-    }
-    if (initialProduct.trim()) {
-      query.set("product", initialProduct.trim());
-    }
-    if (initialInStockOnly && selectedSellingPoint?.id) {
-      query.set("in_stock", "1");
-    }
-
-    const basePath = selectedBrand ? brandFilterPath(selectedBrand) : "/products";
-    const href = query.toString() ? `${basePath}?${query.toString()}` : basePath;
-    router.push(href);
+    pushProductsRoute({
+      keyword: keywordInput,
+      barcode: initialBarcode,
+      brand: initialBrand,
+      product: initialProduct,
+      category: initialCategory,
+    });
   }
 
-  const hasActiveFilters = Boolean(initialBrand || initialBarcode || initialProduct || initialInStockOnly);
+  function toggleCategory(id: string) {
+    setDraftCategories((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  const selectedBrand = brands.find((brand) => brand.id === initialBrand);
+  const selectedCategoryIds = initialCategory.split(",").map((item) => item.trim()).filter(Boolean);
+  const selectedCategories = selectedCategoryIds
+    .map((id) => categories.find((category) => category.id === id))
+    .filter((category): category is Category => Boolean(category));
+  const hasActiveFilters = Boolean(initialKeyword || initialBrand || initialBarcode || initialProduct || initialCategory);
+
+  function removeFilter(filter: "keyword" | "brand" | "barcode" | "product" | "category", categoryId?: string) {
+    const nextCategory =
+      filter === "category" && categoryId
+        ? selectedCategoryIds.filter((id) => id !== categoryId).join(",")
+        : filter === "category"
+          ? ""
+          : initialCategory;
+
+    if (filter === "keyword") {
+      setKeywordInput("");
+      setDraftKeyword("");
+    }
+
+    pushProductsRoute({
+      keyword: filter === "keyword" ? "" : initialKeyword,
+      barcode: filter === "barcode" ? "" : initialBarcode,
+      brand: filter === "brand" ? "" : initialBrand,
+      product: filter === "product" ? "" : initialProduct,
+      category: nextCategory,
+    });
+  }
+
+  function renderCategoryFilterNode(category: Category, depth = 0): React.ReactNode {
+    const children = childrenByParent.get(category.id) || [];
+    const isSelected = draftCategories.includes(category.id);
+
+    return (
+      <details key={category.id} className="products-category-node" open={depth === 0}>
+        <summary>
+          <span style={{ paddingInlineEnd: depth > 0 ? Math.min(depth * 12, 36) : undefined }}>
+            {getCategoryLabel(category)}
+          </span>
+          <button
+            type="button"
+            className={`products-category-check ${isSelected ? "active" : ""}`}
+            onClick={(event) => {
+              event.preventDefault();
+              toggleCategory(category.id);
+            }}
+          >
+            {isSelected ? "\u2713" : "+"}
+          </button>
+        </summary>
+        {children.length ? (
+          <div className="products-category-children">
+            {children.map((child) => renderCategoryFilterNode(child, depth + 1))}
+          </div>
+        ) : null}
+      </details>
+    );
+  }
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
+    <div className="products-page">
       <section className="card products-head-card">
         <form className="products-search-shell" onSubmit={submitSearch}>
           <button type="button" className="products-filter-trigger" aria-label="فتح التصفية" onClick={() => setIsFilterOpen(true)}>
-            <FilterIcon size={18} color="#7e4a53" />
+            <FilterIcon size={22} color="#7e4a53" />
             {hasActiveFilters ? <span className="products-filter-dot" /> : null}
           </button>
 
           <div className="products-search-field">
             <SearchIcon size={18} color="#6d565b" />
             <input
+              ref={inputRef}
               className="products-search-input-plain"
               placeholder="ابحث عن المنتجات..."
               value={keywordInput}
@@ -269,55 +319,70 @@ export default function ProductsCatalog({
             />
           </div>
         </form>
+        {hasActiveFilters ? (
+          <div className="products-active-filters" aria-label="الفلاتر المطبقة">
+            {initialKeyword ? (
+              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("keyword")}>
+                <span>البحث: {initialKeyword}</span>
+                <strong aria-hidden="true">×</strong>
+              </button>
+            ) : null}
+            {initialBarcode ? (
+              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("barcode")}>
+                <span>الباركود: {initialBarcode}</span>
+                <strong aria-hidden="true">×</strong>
+              </button>
+            ) : null}
+            {selectedBrand ? (
+              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("brand")}>
+                <span>{getBrandLabel(selectedBrand)}</span>
+                <strong aria-hidden="true">×</strong>
+              </button>
+            ) : null}
+            {initialProduct ? (
+              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("product")}>
+                <span>منتج محدد</span>
+                <strong aria-hidden="true">×</strong>
+              </button>
+            ) : null}
+            {selectedCategories.map((category) => (
+              <button key={category.id} type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("category", category.id)}>
+                <span>{getCategoryLabel(category)}</span>
+                <strong aria-hidden="true">×</strong>
+              </button>
+            ))}
+          </div>
+        ) : null}
       </section>
 
-      <section className="card">
-        {!visibleProducts.length ? <p className="muted">لم يتم العثور على منتجات.</p> : null}
+      <section className="products-grid-section">
+        {!products.length ? <p className="muted products-empty">لم يتم العثور على منتجات.</p> : null}
         <div className="grid-products">
-          {visibleProducts.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
         {loadError ? <p className="error products-load-state">{loadError}</p> : null}
         {hasMore ? (
           <div ref={sentinelRef} className="products-load-state" aria-hidden="true">
-            {isLoadingMore ? "جار تحميل المزيد..." : "مرر للأسفل لتحميل المزيد"}
+            {isLoadingMore ? "جاري تحميل المزيد..." : "مرر للأسفل لتحميل المزيد"}
           </div>
-        ) : visibleProducts.length ? (
+        ) : products.length ? (
           <p className="muted products-load-state">تم عرض جميع المنتجات.</p>
         ) : null}
       </section>
 
       {isFilterOpen ? (
         <div className="products-modal-overlay" onClick={() => setIsFilterOpen(false)}>
-          <div className="products-modal products-modal-wide" onClick={(event) => event.stopPropagation()}>
+          <div className="products-modal products-modal-full" onClick={(event) => event.stopPropagation()}>
             <div className="products-modal-header products-modal-header-row">
               <h2>تصفية المنتجات</h2>
               <button type="button" className="products-modal-close" aria-label="إغلاق" onClick={() => setIsFilterOpen(false)}>
-                <CloseIcon size={22} color="#1a1a1a" />
+                <CloseIcon size={24} color="#1a1a1a" />
               </button>
             </div>
 
             <div className="products-modal-body">
-              <section className="products-filter-section">
-                <div className="products-section-head">
-                  <h3>توفر المنتج</h3>
-                  <p>عرض المنتجات المتاحة فقط في نقطة البيع المحددة</p>
-                </div>
-                <label className={`products-availability-toggle ${!selectedSellingPoint?.id ? "disabled" : ""}`}>
-                  <input
-                    type="checkbox"
-                    checked={draftInStockOnly && !!selectedSellingPoint?.id}
-                    disabled={!selectedSellingPoint?.id}
-                    onChange={(event) => setDraftInStockOnly(event.target.checked)}
-                  />
-                  <span className="products-toggle-slider" />
-                </label>
-                {!selectedSellingPoint?.id ? (
-                  <p className="products-helper-note">اختر نقطة البيع أولاً لتفعيل هذا الخيار</p>
-                ) : null}
-              </section>
-
               <section className="products-filter-section">
                 <div className="products-section-head">
                   <h3>الباركود</h3>
@@ -363,8 +428,42 @@ export default function ProductsCatalog({
                       ))}
                     </div>
                   ) : (
-                    <p className="products-empty-state">لا توجد علامات تجارية تبدأ بـ {activeBrandLetter}</p>
+                    <p className="products-empty-state">لا توجد علامات تجارية لهذا الحرف.</p>
                   )}
+                </div>
+              </section>
+
+              <section className="products-filter-section">
+                <div className="products-section-head">
+                  <h3>الفئات</h3>
+                  <p>يمكن اختيار أكثر من فئة.</p>
+                </div>
+                <div className="products-category-tree">
+                  {rootCategories.map((category) => {
+                    const children = childrenByParent.get(category.id) || [];
+                    return (
+                      <details key={category.id} className="products-category-node">
+                        <summary>
+                          <span>{getCategoryLabel(category)}</span>
+                          <button
+                            type="button"
+                            className={`products-category-check ${draftCategories.includes(category.id) ? "active" : ""}`}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              toggleCategory(category.id);
+                            }}
+                          >
+                            {draftCategories.includes(category.id) ? "✓" : "+"}
+                          </button>
+                        </summary>
+                        {children.length ? (
+                          <div className="products-category-children">
+                            {children.map((child) => renderCategoryFilterNode(child, 1))}
+                          </div>
+                        ) : null}
+                      </details>
+                    );
+                  })}
                 </div>
               </section>
             </div>

@@ -4,8 +4,8 @@ import AppProviders from "@/components/AppProviders";
 import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
-  title: "Ange Beauty",
-  description: "Ange Beauty web app migrated from Expo mobile app.",
+  title: "أنج بيوتي",
+  description: "أنج بيوتي جمال ملائكي",
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",

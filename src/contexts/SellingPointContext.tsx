@@ -6,6 +6,7 @@ import { getStorageItem, setStorageItem, removeStorageItem } from "@/lib/storage
 import { withClientSourceHeader } from "@/lib/requestHeaders";
 
 const SELECTED_SELLING_POINT_KEY = "selected_selling_point";
+const DEFAULT_SELLING_POINT_ID = "0fTUIooeOt-sp";
 const EMPTY_SELLING_POINTS: SellingPoint[] = [];
 
 
@@ -29,7 +30,7 @@ type SellingPointContextValue = {
 const SellingPointContext = createContext<SellingPointContextValue | undefined>(undefined);
 
 export function SellingPointProvider({ children }: { children: React.ReactNode }) {
-  const [selectedSellingPointId, setSelectedSellingPointId] = useState<string>("");
+  const [selectedSellingPointId, setSelectedSellingPointId] = useState<string>(DEFAULT_SELLING_POINT_ID);
 
   const sellingPointsQuery = useQuery({
     queryKey: ["selling-points"],
@@ -65,10 +66,7 @@ export function SellingPointProvider({ children }: { children: React.ReactNode }
   });
 
   useEffect(() => {
-    const stored = getStorageItem(SELECTED_SELLING_POINT_KEY);
-    if (stored) {
-      setSelectedSellingPointId(stored);
-    }
+    setStorageItem(SELECTED_SELLING_POINT_KEY, DEFAULT_SELLING_POINT_ID);
   }, []);
 
   const setSelectedSellingPointIdAndPersist = useCallback(async (id: string) => {
@@ -81,7 +79,12 @@ export function SellingPointProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const sellingPoints = sellingPointsQuery.data || EMPTY_SELLING_POINTS;
-  const selectedSellingPoint = sellingPoints.find((point) => point.id === selectedSellingPointId) || null;
+  const selectedSellingPoint =
+    sellingPoints.find((point) => point.id === selectedSellingPointId) || {
+      id: DEFAULT_SELLING_POINT_ID,
+      name_ar: "مركز انج بيوتي حساب جديد",
+      name_en: "",
+    };
   const sellingPointsError =
     sellingPointsQuery.error instanceof Error ? sellingPointsQuery.error.message : null;
 

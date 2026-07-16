@@ -19,6 +19,14 @@ export type ServerFetchProductsParams = {
   highlighted?: number | boolean;
 };
 
+export type PublicCategory = {
+  id: string;
+  category_name_ar: string;
+  category_name_en?: string | null;
+  parent_category?: string | null;
+  aggregate_version?: number | string | null;
+};
+
 export type ServerFetchProductsResponse = {
   products: Product[];
   hasMore: boolean;
@@ -242,9 +250,55 @@ export async function fetchBrandsServer(): Promise<
     const response = await serverFetch("/api/v1/brands");
     if (!response.ok) return [];
     const result = await response.json();
-    if (!result || result.status !== "success" || !result.data) return [];
+    const isSuccess = result?.success === true || result?.status === "success";
+    if (!isSuccess || !result.data) return [];
     const brands = Array.isArray(result.data) ? result.data : [];
     return brands.filter((brand: any) => brand && brand.id && brand.brand_name_ar);
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchCategoriesServer(): Promise<PublicCategory[]> {
+  const mapCategories = (data: any[]): PublicCategory[] =>
+    data
+      .filter((category: any) => {
+        const isActive = category.is_active === undefined || category.is_active === true || category.is_active === 1;
+        return category && category.id && (category.category_name_ar || category.category_name_en || category.name_ar || category.name) && isActive;
+      })
+      .map((category: any) => ({
+        id: String(category.id),
+        category_name_ar: String(category.category_name_ar || category.name_ar || category.name || ""),
+        category_name_en: category.category_name_en || category.name_en || null,
+        parent_category: category.parent_category || null,
+        aggregate_version: category.aggregate_version ?? null,
+      }));
+
+  const fetchFromUrl = async (url: string): Promise<PublicCategory[]> => {
+    const response = await fetch(url, {
+      headers: withClientSourceHeader({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      }),
+      next: { revalidate: 300 },
+    });
+    if (!response.ok) return [];
+    const result = await response.json();
+    const isSuccess = result?.success === true || result?.status === "success";
+    if (!isSuccess || !Array.isArray(result.data)) return [];
+
+    return mapCategories(result.data);
+  };
+
+  try {
+    const categories = await fetchFromUrl(`${API_BASE}/api/v1/categories`);
+    if (categories.length || API_BASE === "https://api.angebeauty.net") return categories;
+  } catch {
+    // Fall through to the public API fallback below.
+  }
+
+  try {
+    return fetchFromUrl("https://api.angebeauty.net/api/v1/categories");
   } catch {
     return [];
   }

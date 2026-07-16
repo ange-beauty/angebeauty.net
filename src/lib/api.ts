@@ -11,8 +11,10 @@ export interface Brand {
 
 export interface Category {
   id: string;
-  name_ar: string;
-  name_en?: string;
+  category_name_ar: string;
+  category_name_en?: string | null;
+  parent_category?: string | null;
+  aggregate_version?: number | string | null;
 }
 
 export interface FetchProductsParams {
@@ -107,7 +109,8 @@ export async function fetchBrands(): Promise<Brand[]> {
 
     if (!response.ok) return [];
     const result = await response.json();
-    if (!result || result.status !== "success" || !result.data) return [];
+    const isSuccess = result?.success === true || result?.status === "success";
+    if (!isSuccess || !result.data) return [];
     const brands = Array.isArray(result.data) ? result.data : [];
     return brands.filter((brand: any) => brand && brand.id && brand.brand_name_ar);
   } catch {
@@ -116,7 +119,36 @@ export async function fetchBrands(): Promise<Brand[]> {
 }
 
 export async function fetchCategories(): Promise<Category[]> {
-  return [];
+  try {
+    const response = await fetch(`/api/v1/categories`, {
+      method: "GET",
+      headers: withClientSourceHeader({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      }),
+      credentials: "include",
+    });
+
+    if (!response.ok) return [];
+    const result = await response.json();
+    const isSuccess = result?.success === true || result?.status === "success";
+    if (!isSuccess || !Array.isArray(result.data)) return [];
+
+    return result.data
+      .filter((category: any) => {
+        const isActive = category.is_active === undefined || category.is_active === true || category.is_active === 1;
+        return category && category.id && (category.category_name_ar || category.category_name_en || category.name_ar || category.name) && isActive;
+      })
+      .map((category: any) => ({
+        id: String(category.id),
+        category_name_ar: String(category.category_name_ar || category.name_ar || category.name || ""),
+        category_name_en: category.category_name_en || category.name_en || null,
+        parent_category: category.parent_category || null,
+        aggregate_version: category.aggregate_version ?? null,
+      }));
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchProductById(id: string): Promise<Product | null> {
