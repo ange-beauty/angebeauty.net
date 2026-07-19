@@ -119,12 +119,22 @@ export default function BasketPage() {
 
     setErrors({});
     orderMutation.mutate({
-      client_name: name.trim(),
-      client_email: email.trim(),
-      client_phone: telephone.trim(),
-      client_address: address.trim(),
       selling_point: selectedSellingPoint?.id,
-      basket_items: products.map((item) => ({ product: item.id, quantity: item.quantity })),
+      customer: {
+        name: name.trim(),
+        email: email.trim(),
+        telephone: telephone.trim(),
+        address: address.trim(),
+      },
+      items: products.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      summary: {
+        totalItems: products.reduce((sum, item) => sum + item.quantity, 0),
+        totalPrice,
+      },
     });
   }
 
