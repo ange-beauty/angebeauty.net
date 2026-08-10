@@ -111,12 +111,12 @@ export default function BasketPage() {
 
     if (!name.trim()) nextErrors.name = "الاسم الكامل مطلوب.";
     if (!telephone.trim()) nextErrors.telephone = "رقم الهاتف مطلوب.";
-    if (!email.trim()) nextErrors.email = "البريد الإلكتروني مطلوب.";
+    if (checkoutMode === "auth" && !email.trim()) nextErrors.email = "البريد الإلكتروني مطلوب.";
     if (!address.trim()) nextErrors.address = "العنوان مطلوب.";
     if (!selectedSellingPoint?.id) nextErrors.sellingPoint = "يرجى اختيار نقطة البيع أولاً.";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email.trim() && !emailRegex.test(email.trim())) {
+    if (checkoutMode === "auth" && email.trim() && !emailRegex.test(email.trim())) {
       nextErrors.email = "يرجى إدخال بريد إلكتروني صحيح.";
     }
 
@@ -149,7 +149,7 @@ export default function BasketPage() {
         selling_point: selectedSellingPoint?.id,
         customer: {
           name: name.trim(),
-          email: email.trim(),
+          ...(checkoutMode === "auth" ? { email: email.trim() } : {}),
           telephone: telephone.trim(),
           address: address.trim(),
         },
@@ -312,11 +312,13 @@ export default function BasketPage() {
                 {errors.telephone ? <p className="error">{errors.telephone}</p> : null}
               </label>
 
-              <label className="basket-field">
-                <span>البريد الإلكتروني *</span>
-                <input className="input" placeholder="أدخل بريدك الإلكتروني" value={email} onChange={(event) => setEmail(event.target.value)} />
-                {errors.email ? <p className="error">{errors.email}</p> : null}
-              </label>
+              {checkoutMode === "auth" ? (
+                <label className="basket-field">
+                  <span>البريد الإلكتروني *</span>
+                  <input className="input" placeholder="أدخل بريدك الإلكتروني" value={email} onChange={(event) => setEmail(event.target.value)} />
+                  {errors.email ? <p className="error">{errors.email}</p> : null}
+                </label>
+              ) : null}
 
               <label className="basket-field">
                 <span>نقطة البيع *</span>
