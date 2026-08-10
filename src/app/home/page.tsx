@@ -157,7 +157,7 @@ export default async function HomePage() {
       <section className="home-section">
         <div className="home-section-head">
           <Link href="/categories">عرض الكل</Link>
-          <h2>الفئات</h2>
+          <h2>تصنيفات</h2>
         </div>
         <div className="home-category-strip">
           {rootCategories.map((category) => (

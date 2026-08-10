@@ -20,9 +20,9 @@ import {
 const tabs = [
   { href: "/home", label: "اكتشف", icon: <HomeIcon size={29} /> },
   { href: "/products", label: "المنتجات", icon: <PackageIcon size={28} /> },
-  { href: "/categories", label: "الفئات", icon: <GridIcon size={28} /> },
+  { href: "/categories", label: "تصنيفات", icon: <GridIcon size={28} /> },
   { href: "/basket", label: "السلة", icon: <ShoppingBagIcon size={28} strokeWidth={1.9} /> },
-  { href: "/brands", label: "العلامات", icon: <TagIcon size={28} strokeWidth={1.9} /> },
+  { href: "/brands", label: "برانداتنا", icon: <TagIcon size={28} strokeWidth={1.9} /> },
   { href: "/account", label: "حسابي", icon: <UserIcon size={29} strokeWidth={1.9} /> },
 ];
 

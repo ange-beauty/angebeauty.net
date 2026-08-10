@@ -435,7 +435,7 @@ export default function ProductsCatalog({
 
               <section className="products-filter-section">
                 <div className="products-section-head">
-                  <h3>الفئات</h3>
+                  <h3>تصنيفات</h3>
                   <p>يمكن اختيار أكثر من فئة.</p>
                 </div>
                 <div className="products-category-tree">

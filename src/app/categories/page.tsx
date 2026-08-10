@@ -36,7 +36,7 @@ function renderCategoryBranch(
 }
 
 export const metadata = {
-  title: "الفئات | أنج بيوتي",
+  title: "تصنيفات | أنج بيوتي",
 };
 
 export default async function CategoriesPage() {
