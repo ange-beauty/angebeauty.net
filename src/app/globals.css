@@ -2456,6 +2456,12 @@ body {
   display: block;
 }
 
+.basket-turnstile-wrap {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
 .product-detail-image-trigger {
   width: 100%;
   padding: 0;

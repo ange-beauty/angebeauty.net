@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 type Props = {
-  action: "login" | "register";
+  action: "login" | "register" | "checkout";
   resetKey?: number;
   onTokenChange: (token: string | null) => void;
 };

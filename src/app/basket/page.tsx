@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueries } from "@tanstack/react-query";
 import Link from "next/link";
 import { CloseIcon, MinusIcon, PlusIcon, TrashIcon } from "@/components/Icons";
@@ -11,6 +11,7 @@ import { fetchProductById } from "@/lib/api";
 import { withClientSourceHeader } from "@/lib/requestHeaders";
 import { formatPrice } from "@/lib/formatPrice";
 import { getAvailableQuantityForSellingPoint } from "@/lib/availability";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 type CheckoutMode = "closed" | "guest" | "auth";
 
@@ -24,6 +25,9 @@ export default function BasketPage() {
   const [telephone, setTelephone] = useState("");
   const [address, setAddress] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     setName(user?.name || "");
@@ -53,12 +57,13 @@ export default function BasketPage() {
   );
 
   const orderMutation = useMutation({
-    mutationFn: async (orderData: any) => {
+    mutationFn: async ({ orderData, idempotencyKey }: { orderData: any; idempotencyKey: string }) => {
       const response = await fetch(`/api/v1/selling-orders/client-initialization`, {
         method: "POST",
         headers: withClientSourceHeader({
           Accept: "application/json",
           "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
         }),
         body: JSON.stringify(orderData),
       });
@@ -74,15 +79,31 @@ export default function BasketPage() {
       setAddress("");
       setErrors({});
       setCheckoutMode("closed");
+      setTurnstileToken(null);
+      idempotencyKeyRef.current = null;
     },
     onError: (error: any) => {
       window.alert(error?.message || "حدث خطأ غير متوقع أثناء إرسال الطلب.");
+      if (checkoutMode === "guest") {
+        setTurnstileToken(null);
+        setTurnstileResetKey((previous) => previous + 1);
+      }
     },
   });
 
   function openCheckout(mode: CheckoutMode) {
     setErrors({});
+    setTurnstileToken(null);
+    setTurnstileResetKey((previous) => previous + 1);
+    idempotencyKeyRef.current = crypto.randomUUID();
     setCheckoutMode(mode);
+  }
+
+  function closeCheckout() {
+    setCheckoutMode("closed");
+    setTurnstileToken(null);
+    idempotencyKeyRef.current = null;
+    setErrors({});
   }
 
   function submitOrder() {
@@ -111,6 +132,9 @@ export default function BasketPage() {
     if (checkoutMode === "auth" && (!isAuthenticated || !user?.emailVerified)) {
       nextErrors.auth = "يرجى تسجيل الدخول وتفعيل البريد الإلكتروني أو استخدام الطلب كزائر.";
     }
+    if (checkoutMode === "guest" && !turnstileToken) {
+      nextErrors.turnstile = "أكمل التحقق أولاً.";
+    }
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -118,22 +142,27 @@ export default function BasketPage() {
     }
 
     setErrors({});
+    idempotencyKeyRef.current ||= crypto.randomUUID();
     orderMutation.mutate({
-      selling_point: selectedSellingPoint?.id,
-      customer: {
-        name: name.trim(),
-        email: email.trim(),
-        telephone: telephone.trim(),
-        address: address.trim(),
-      },
-      items: products.map((item) => ({
-        productId: item.id,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      summary: {
-        totalItems: products.reduce((sum, item) => sum + item.quantity, 0),
-        totalPrice,
+      idempotencyKey: idempotencyKeyRef.current,
+      orderData: {
+        selling_point: selectedSellingPoint?.id,
+        customer: {
+          name: name.trim(),
+          email: email.trim(),
+          telephone: telephone.trim(),
+          address: address.trim(),
+        },
+        items: products.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        summary: {
+          totalItems: products.reduce((sum, item) => sum + item.quantity, 0),
+          totalPrice,
+        },
+        security_token: checkoutMode === "guest" ? turnstileToken : undefined,
       },
     });
   }
@@ -251,7 +280,7 @@ export default function BasketPage() {
       ) : null}
 
       {checkoutMode !== "closed" ? (
-        <div className="basket-checkout-overlay" onClick={() => setCheckoutMode("closed")}>
+        <div className="basket-checkout-overlay" onClick={closeCheckout}>
           <section className="basket-checkout-sheet" onClick={(event) => event.stopPropagation()}>
             <header className="basket-checkout-header">
               <h2>إتمام الطلب</h2>
@@ -259,7 +288,7 @@ export default function BasketPage() {
                 type="button"
                 className="basket-checkout-close"
                 aria-label="إغلاق"
-                onClick={() => setCheckoutMode("closed")}
+                onClick={closeCheckout}
               >
                 <CloseIcon size={18} color="#1f1719" />
               </button>
@@ -308,6 +337,22 @@ export default function BasketPage() {
 
               {errors.auth ? <p className="error">{errors.auth}</p> : null}
               {errors.availability ? <p className="error">{errors.availability}</p> : null}
+
+              {checkoutMode === "guest" ? (
+                <div className="basket-turnstile-wrap">
+                  <TurnstileWidget
+                    action="checkout"
+                    resetKey={turnstileResetKey}
+                    onTokenChange={(token) => {
+                      setTurnstileToken(token);
+                      if (token && errors.turnstile) {
+                        setErrors((previous) => ({ ...previous, turnstile: "" }));
+                      }
+                    }}
+                  />
+                  {errors.turnstile ? <p className="error">{errors.turnstile}</p> : null}
+                </div>
+              ) : null}
 
               <button
                 type="button"
