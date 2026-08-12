@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { MailIcon, PhoneIcon, WhatsAppIcon } from "@/components/Icons";
 
-const phone = "+96477061791777";
-const phoneLabel = "+964 770 617 91777";
+const phone = "+9647761791777";
+const phoneLabel = "+964 776 179 1777";
 const email = "support@angebeauty.net";
 
 export const metadata: Metadata = {
