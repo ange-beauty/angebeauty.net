@@ -244,7 +244,7 @@ export async function fetchPublicOffersServer(): Promise<PublicOffer[]> {
 }
 
 export async function fetchBrandsServer(): Promise<
-  Array<{ id: string; brand_name_ar: string; brand_name_en?: string }>
+  Array<{ id: string; brand_name_ar: string; brand_name_en?: string; icon?: string | null; aggregate_version?: number }>
 > {
   try {
     const response = await serverFetch("/api/v1/brands");

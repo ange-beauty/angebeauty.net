@@ -7,8 +7,10 @@ import { formatPrice } from "@/lib/formatPrice";
 import { fetchMyOrders, type ClientOrder } from "@/lib/orders";
 
 const statusLabels: Record<string, string> = {
-  pending: "قيد المراجعة",
+  draft: "\u0645\u0633\u0648\u062f\u0629",
   confirmed: "مؤكد",
+  partially_returned: "\u0645\u0631\u062a\u062c\u0639 \u062c\u0632\u0626\u064a\u0627\u064b",
+  returned: "\u0645\u0631\u062a\u062c\u0639",
   cancelled: "ملغى",
   completed: "مكتمل",
 };
@@ -30,7 +32,7 @@ function OrderCard({ order }: { order: ClientOrder }) {
           {statusLabels[order.status] || order.status}
         </span>
         <div className="client-order-identity">
-          <strong>{order.id}</strong>
+          <strong>{order.sellingOrder || order.id}</strong>
           <time>{formatDate(order.createdAt)}</time>
         </div>
       </div>

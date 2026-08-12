@@ -4,13 +4,21 @@ import { slugifyProductName } from "@/lib/productUrl";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-function brandLabel(brand: { id: string; brand_name_ar: string; brand_name_en?: string }) {
+type Brand = { id: string; brand_name_ar: string; brand_name_en?: string; icon?: string | null; aggregate_version?: number };
+
+function brandLabel(brand: Brand) {
   return brand.brand_name_ar || brand.brand_name_en || brand.id;
 }
 
-function firstLetter(brand: { id: string; brand_name_ar: string; brand_name_en?: string }) {
+function firstLetter(brand: Brand) {
   const label = (brand.brand_name_en || brand.brand_name_ar || brand.id).trim();
   return (label[0] || "#").toUpperCase();
+}
+
+function brandIconUrl(brand: Brand) {
+  if (!brand.icon) return "";
+  const root = process.env.NEXT_PUBLIC_ROOT_DIR || "angeapi";
+  return `https://images.angebeauty.net/${root}/cdn/images/${brand.id}/${brand.icon}?v=${brand.aggregate_version || 1}`;
 }
 
 export const metadata = {
@@ -41,13 +49,16 @@ export default async function BrandsPage() {
             <div className="brands-grid">
               {group.brands.map((brand) => {
                 const label = brandLabel(brand);
+                const iconUrl = brandIconUrl(brand);
                 return (
                   <Link
                     key={brand.id}
                     href={`/products/brand/${encodeURIComponent(brand.id)}/${encodeURIComponent(slugifyProductName(label) || "brand")}`}
                     className="brand-card"
                   >
-                    <span className="brand-logo-text">{label}</span>
+                    <span className="brand-logo-text">
+                      {iconUrl ? <img src={iconUrl} alt="" /> : label}
+                    </span>
                     <strong>{label}</strong>
                   </Link>
                 );

@@ -180,7 +180,13 @@ export default async function HomePage() {
               href={`/products/brand/${encodeURIComponent(brand.id)}/${encodeURIComponent(slugifyProductName(brand.brand_name_ar || brand.brand_name_en || brand.id) || "brand")}`}
               className="home-brand-card"
             >
-              {brand.brand_name_ar || brand.brand_name_en || brand.id}
+              {brand.icon && (
+                <img
+                  src={`https://images.angebeauty.net/${process.env.NEXT_PUBLIC_ROOT_DIR || "angeapi"}/cdn/images/${brand.id}/${brand.icon}?v=${brand.aggregate_version || 1}`}
+                  alt=""
+                />
+              )}
+              <span>{brand.brand_name_ar || brand.brand_name_en || brand.id}</span>
             </Link>
           ))}
         </div>
