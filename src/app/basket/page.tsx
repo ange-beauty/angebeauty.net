@@ -155,6 +155,8 @@ export default function BasketPage() {
         },
         items: products.map((item) => ({
           productId: item.id,
+          productName: item.name,
+          image: item.image,
           quantity: item.quantity,
           price: item.price,
         })),
