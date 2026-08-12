@@ -66,9 +66,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             />
             <SearchIcon size={22} color="#c44838" />
           </form>
-          <a href="https://wa.me/96477061791777" target="_blank" rel="noreferrer" className="header-round-btn" aria-label="تواصل معنا على واتساب">
+          <Link href="/contact" className="header-round-btn" aria-label="تواصل معنا">
             <WhatsAppIcon size={24} />
-          </a>
+          </Link>
         </header>
       ) : null}
       <main className="app-main">{children}</main>

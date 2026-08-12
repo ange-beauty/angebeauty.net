@@ -1,15 +1,66 @@
-﻿import Link from "next/link";
+import type { Metadata } from "next";
+import { MailIcon, PhoneIcon, WhatsAppIcon } from "@/components/Icons";
+
+const phone = "+96477061791777";
+const phoneLabel = "+964 770 617 91777";
+const email = "support@angebeauty.net";
+
+export const metadata: Metadata = {
+  title: "تواصل معنا | أنج بيوتي",
+  description: "تواصل مع خدمة عملاء أنج بيوتي عبر الهاتف أو واتساب أو البريد الإلكتروني.",
+};
+
+const contactMethods = [
+  {
+    href: `tel:${phone}`,
+    title: "اتصال هاتفي",
+    value: phoneLabel,
+    icon: <PhoneIcon size={23} />,
+  },
+  {
+    href: `https://wa.me/${phone.replace("+", "")}`,
+    title: "واتساب",
+    value: "تحدث مع خدمة العملاء",
+    icon: <WhatsAppIcon size={24} />,
+    external: true,
+  },
+  {
+    href: `mailto:${email}`,
+    title: "البريد الإلكتروني",
+    value: email,
+    icon: <MailIcon size={23} />,
+  },
+];
 
 export default function ContactPage() {
   return (
-    <div className="card" style={{ display: "grid", gap: 10 }}>
-      <h1 className="page-title">Contact Us</h1>
-      <a className="button secondary" href="tel:+212638624446">Call: +212638624446</a>
-      <a className="button secondary" href="https://wa.me/212638624446" target="_blank" rel="noreferrer">WhatsApp</a>
-      <a className="button secondary" href="mailto:support@angebeauty.net">support@angebeauty.net</a>
-      <Link href="/home" className="button primary" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-        Back to Home
-      </Link>
+    <div className="contact-page" dir="rtl">
+      <header className="contact-intro">
+        <span className="contact-kicker">أنج بيوتي</span>
+        <h1>تواصل معنا</h1>
+        <p>اختر وسيلة التواصل المناسبة وسيساعدك فريق خدمة العملاء.</p>
+      </header>
+
+      <section className="contact-methods" aria-label="وسائل التواصل">
+        {contactMethods.map((method) => (
+          <a
+            key={method.title}
+            className="contact-method"
+            href={method.href}
+            target={method.external ? "_blank" : undefined}
+            rel={method.external ? "noreferrer" : undefined}
+          >
+            <span className="contact-method-icon">{method.icon}</span>
+            <span className="contact-method-copy">
+              <strong>{method.title}</strong>
+              <span dir={method.title === "البريد الإلكتروني" ? "ltr" : undefined}>{method.value}</span>
+            </span>
+            <span className="contact-method-arrow" aria-hidden="true">‹</span>
+          </a>
+        ))}
+      </section>
+
+      <p className="contact-note">للاستفسار عن طلب، يرجى تجهيز رقم الطلب قبل التواصل.</p>
     </div>
   );
 }
