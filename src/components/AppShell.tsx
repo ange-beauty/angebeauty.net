@@ -23,6 +23,7 @@ const tabs = [
   { href: "/categories", label: "تصنيفات", icon: <GridIcon size={28} /> },
   { href: "/basket", label: "السلة", icon: <ShoppingBagIcon size={28} strokeWidth={1.9} /> },
   { href: "/brands", label: "برانداتنا", icon: <TagIcon size={28} strokeWidth={1.9} /> },
+  { href: "/contact", label: "تواصل", icon: <WhatsAppIcon size={27} /> },
   { href: "/account", label: "حسابي", icon: <UserIcon size={29} strokeWidth={1.9} /> },
 ];
 
@@ -66,9 +67,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             />
             <SearchIcon size={22} color="#c44838" />
           </form>
-          <Link href="/contact" className="header-round-btn" aria-label="تواصل معنا">
-            <WhatsAppIcon size={24} />
-          </Link>
         </header>
       ) : null}
       <main className="app-main">{children}</main>
