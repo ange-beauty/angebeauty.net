@@ -1103,6 +1103,131 @@ body {
   font-size: 13px;
 }
 
+.client-orders-page {
+  width: min(880px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 112px 0 24px;
+  direction: rtl;
+}
+
+.client-orders-title-row h1 {
+  margin: 0 0 16px;
+  color: #2f2527;
+  font-size: 30px;
+}
+
+.client-orders-list {
+  display: grid;
+  gap: 10px;
+}
+
+.client-order-card {
+  padding: 16px;
+  border: 1px solid #e8dcdd;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.client-order-heading,
+.client-order-footer,
+.client-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.client-order-heading {
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.client-order-identity {
+  min-width: 0;
+  display: grid;
+  justify-items: end;
+}
+
+.client-order-identity strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.client-order-identity time {
+  margin-top: 3px;
+  color: #7d6a6e;
+  font-size: 13px;
+}
+
+.client-order-status {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #f2ecee;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.client-order-status.status-pending { background: #fff1d6; }
+.client-order-status.status-confirmed { background: #ddf3e4; }
+.client-order-status.status-completed { background: #ddecf6; }
+.client-order-status.status-cancelled { background: #f8dede; }
+
+.client-order-item {
+  min-height: 34px;
+  border-top: 1px solid #f2ecee;
+}
+
+.client-order-item p {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.client-order-item span,
+.client-order-more,
+.client-order-footer span {
+  color: #7d6a6e;
+  font-size: 13px;
+}
+
+.client-order-more {
+  margin: 5px 0 0;
+}
+
+.client-order-footer {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid #e8dcdd;
+}
+
+.client-order-footer strong {
+  color: #7e4a53;
+  font-size: 17px;
+}
+
+.client-orders-state {
+  min-height: 300px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  color: #7d6a6e;
+}
+
+.client-orders-state h2,
+.client-orders-state p {
+  margin: 4px 0;
+}
+
+.client-orders-error {
+  color: #9e3434;
+}
+
 .input,
 .select,
 .textarea {
