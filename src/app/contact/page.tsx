@@ -60,6 +60,9 @@ export default function ContactPage() {
         ))}
       </section>
 
+      <a className="contact-privacy-link" href="/privacy">
+        سياسة الخصوصية | Privacy Policy
+      </a>
       <p className="contact-note">للاستفسار عن طلب، يرجى تجهيز رقم الطلب قبل التواصل.</p>
     </div>
   );
