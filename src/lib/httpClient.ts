@@ -1,4 +1,5 @@
 import { withClientSourceHeader } from "@/lib/requestHeaders";
+import { getArabicApiErrorMessage } from "@/lib/apiErrorMessages";
 
 
 
@@ -75,7 +76,11 @@ export async function apiFetch<T = any>(path: string, options: ApiFetchOptions =
 
   const body = await safeJsonParse(response);
   if (!response.ok) {
-    throw new ApiHttpError(response.status, body?.message || "Request failed", body);
+    const localizedMessage = getArabicApiErrorMessage(body);
+    const localizedBody = body && typeof body === "object"
+      ? { ...body, message: localizedMessage }
+      : { success: false, message: localizedMessage };
+    throw new ApiHttpError(response.status, localizedMessage, localizedBody);
   }
 
   return body as T;

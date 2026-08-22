@@ -10,6 +10,7 @@ import {
   sendEmailVerification as authSendEmailVerification,
 } from "@/lib/auth";
 import { ApiHttpError } from "@/lib/httpClient";
+import { getArabicApiErrorMessage } from "@/lib/apiErrorMessages";
 
 export type AuthUser = {
   id: string;
@@ -96,8 +97,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       const message =
         error instanceof ApiHttpError
-          ? error.body?.message || "Invalid credentials"
-          : "Server connection failed";
+          ? getArabicApiErrorMessage(
+              error.body,
+              "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+            )
+          : "تعذر الاتصال بالخادم. يرجى المحاولة مجدداً.";
       return { success: false, message };
     }
   }, [resolveSession]);
