@@ -74,3 +74,21 @@ export async function verifyEmailToken(token: string): Promise<any> {
     skipRefreshRetry: true,
   });
 }
+
+export async function forgotPassword(email: string): Promise<any> {
+  return apiFetch("/api/v1/auth/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: email.trim() }),
+    skipRefreshRetry: true,
+  });
+}
+
+export async function resetPassword(token: string, password: string): Promise<any> {
+  return apiFetch("/api/v1/auth/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: token.trim(), password }),
+    skipRefreshRetry: true,
+  });
+}

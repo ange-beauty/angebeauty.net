@@ -133,6 +133,10 @@ export default function AccountPage() {
           <input className="input" placeholder="كلمة المرور" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
           {fieldErrors.password ? <p className="error">{fieldErrors.password}</p> : null}
 
+          <Link href="/forgot-password" style={{ color: "#7E4A53", fontWeight: 700 }}>
+            نسيت كلمة المرور؟
+          </Link>
+
           <TurnstileWidget
             action="login"
             resetKey={turnstileResetKey}
