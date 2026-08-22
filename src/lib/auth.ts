@@ -92,3 +92,12 @@ export async function resetPassword(token: string, password: string): Promise<an
     skipRefreshRetry: true,
   });
 }
+
+export async function validatePasswordResetToken(token: string): Promise<any> {
+  return apiFetch("/api/v1/auth/reset-password/validate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: token.trim() }),
+    skipRefreshRetry: true,
+  });
+}
