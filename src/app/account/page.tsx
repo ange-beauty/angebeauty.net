@@ -7,6 +7,8 @@ import { ClipboardIcon, HeartIcon, UserIcon } from "@/components/Icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBasket } from "@/contexts/BasketContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { deleteAccount } from "@/lib/auth";
+import { ApiHttpError } from "@/lib/httpClient";
 
 export default function AccountPage() {
   const { user, isLoading, isAuthenticated, login, logout, resendEmailVerification } = useAuth();
@@ -17,6 +19,7 @@ export default function AccountPage() {
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
@@ -44,6 +47,27 @@ export default function AccountPage() {
       setFieldErrors({ email: result.message });
     }
     setIsSubmitting(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "سيتم حذف حسابك نهائياً ولن تتمكن من تسجيل الدخول إليه مرة أخرى. هل تريد المتابعة؟",
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsDeletingAccount(true);
+      await deleteAccount();
+      await logout();
+    } catch (error) {
+      window.alert(
+        error instanceof ApiHttpError
+          ? error.body?.message || "تعذر حذف الحساب"
+          : "تعذر الاتصال بالخادم",
+      );
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   if (isLoading) {
@@ -75,6 +99,14 @@ export default function AccountPage() {
 
           <section className="card account-logout-card">
             <button className="account-logout-btn" onClick={logout}>تسجيل خروج</button>
+            <button
+              type="button"
+              className="account-delete-btn"
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount}
+            >
+              {isDeletingAccount ? "جاري حذف الحساب..." : "حذف الحساب نهائياً"}
+            </button>
           </section>
 
           <section className="account-menu">
