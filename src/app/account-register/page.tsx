@@ -89,10 +89,17 @@ export default function RegisterPage() {
       <input className="input register-input" placeholder="تأكيد كلمة المرور" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
       {fieldErrors.confirmPassword ? <p className="error">{fieldErrors.confirmPassword}</p> : null}
 
-      <label className="register-consent-row">
-        <span>أوافق على شروط وأحكام الاستخدام</span>
-        <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
-      </label>
+      <div className="register-consent-row">
+        <label htmlFor="accepted-terms">
+          أوافق على <a className="register-consent-link" href="/terms" target="_blank" rel="noreferrer">شروط وأحكام الاستخدام</a>
+        </label>
+        <input
+          id="accepted-terms"
+          type="checkbox"
+          checked={acceptedTerms}
+          onChange={(event) => setAcceptedTerms(event.target.checked)}
+        />
+      </div>
       {fieldErrors.acceptedTerms ? <p className="error">{fieldErrors.acceptedTerms}</p> : null}
 
       <label className="register-consent-row">

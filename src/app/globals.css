@@ -2646,6 +2646,18 @@ body {
   font-size: 14px;
 }
 
+.register-consent-row > label {
+  flex: 1;
+  cursor: pointer;
+}
+
+.register-consent-link {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .register-consent-row input[type="checkbox"] {
   appearance: none;
   width: 22px;
