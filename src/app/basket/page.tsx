@@ -23,7 +23,10 @@ export default function BasketPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
-  const [address, setAddress] = useState("");
+  const [provence, setProvence] = useState("");
+  const [city, setCity] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
@@ -33,6 +36,10 @@ export default function BasketPage() {
     setName(user?.name || "");
     setEmail(user?.email || "");
     setTelephone(user?.phone || "");
+    setProvence(user?.provence || "");
+    setCity(user?.city || "");
+    setAddressLine(user?.addressLine || "");
+    setAddressComplement(user?.addressComplement || "");
   }, [user]);
 
   const productQueries = useQueries({
@@ -76,7 +83,10 @@ export default function BasketPage() {
     onSuccess: () => {
       window.alert("تم إرسال الطلب بنجاح.");
       clearBasket();
-      setAddress("");
+      setProvence("");
+      setCity("");
+      setAddressLine("");
+      setAddressComplement("");
       setErrors({});
       setCheckoutMode("closed");
       setTurnstileToken(null);
@@ -92,6 +102,23 @@ export default function BasketPage() {
   });
 
   function openCheckout(mode: CheckoutMode) {
+    if (mode === "guest") {
+      setName("");
+      setEmail("");
+      setTelephone("");
+      setProvence("");
+      setCity("");
+      setAddressLine("");
+      setAddressComplement("");
+    } else {
+      setName(user?.name || "");
+      setEmail(user?.email || "");
+      setTelephone(user?.phone || "");
+      setProvence(user?.provence || "");
+      setCity(user?.city || "");
+      setAddressLine(user?.addressLine || "");
+      setAddressComplement(user?.addressComplement || "");
+    }
     setErrors({});
     setTurnstileToken(null);
     setTurnstileResetKey((previous) => previous + 1);
@@ -112,7 +139,10 @@ export default function BasketPage() {
     if (!name.trim()) nextErrors.name = "الاسم الكامل مطلوب.";
     if (!telephone.trim()) nextErrors.telephone = "رقم الهاتف مطلوب.";
     if (checkoutMode === "auth" && !email.trim()) nextErrors.email = "البريد الإلكتروني مطلوب.";
-    if (!address.trim()) nextErrors.address = "العنوان مطلوب.";
+    if (!provence.trim()) nextErrors.provence = "المحافظة مطلوبة.";
+    if (!city.trim()) nextErrors.city = "المدينة مطلوبة.";
+    if (!addressLine.trim()) nextErrors.addressLine = "العنوان مطلوب.";
+    if (!addressComplement.trim()) nextErrors.addressComplement = "أقرب نقطة دالة مطلوبة.";
     if (!selectedSellingPoint?.id) nextErrors.sellingPoint = "يرجى اختيار نقطة البيع أولاً.";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -143,6 +173,10 @@ export default function BasketPage() {
 
     setErrors({});
     idempotencyKeyRef.current ||= crypto.randomUUID();
+    const combinedAddress = [provence, city, addressLine, addressComplement]
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .join("، ");
     orderMutation.mutate({
       idempotencyKey: idempotencyKeyRef.current,
       orderData: {
@@ -151,7 +185,11 @@ export default function BasketPage() {
           name: name.trim(),
           ...(checkoutMode === "auth" ? { email: email.trim() } : {}),
           telephone: telephone.trim(),
-          address: address.trim(),
+          provence: provence.trim(),
+          city: city.trim(),
+          address_line: addressLine.trim(),
+          address_complement: addressComplement.trim(),
+          address: combinedAddress,
         },
         items: products.map((item) => ({
           productId: item.id,
@@ -334,9 +372,27 @@ export default function BasketPage() {
               </label>
 
               <label className="basket-field">
+                <span>المحافظة *</span>
+                <input className="input" placeholder="أدخلي المحافظة" value={provence} onChange={(event) => setProvence(event.target.value)} />
+                {errors.provence ? <p className="error">{errors.provence}</p> : null}
+              </label>
+
+              <label className="basket-field">
+                <span>المدينة *</span>
+                <input className="input" placeholder="أدخلي المدينة" value={city} onChange={(event) => setCity(event.target.value)} />
+                {errors.city ? <p className="error">{errors.city}</p> : null}
+              </label>
+
+              <label className="basket-field">
                 <span>العنوان *</span>
-                <textarea className="textarea basket-address-input" placeholder="أدخل عنوانك الكامل" value={address} onChange={(event) => setAddress(event.target.value)} />
-                {errors.address ? <p className="error">{errors.address}</p> : null}
+                <textarea className="textarea basket-address-input" placeholder="أدخلي العنوان" value={addressLine} onChange={(event) => setAddressLine(event.target.value)} />
+                {errors.addressLine ? <p className="error">{errors.addressLine}</p> : null}
+              </label>
+
+              <label className="basket-field">
+                <span>أقرب نقطة دالة *</span>
+                <input className="input" placeholder="مثال: قرب المدرسة أو السوق" value={addressComplement} onChange={(event) => setAddressComplement(event.target.value)} />
+                {errors.addressComplement ? <p className="error">{errors.addressComplement}</p> : null}
               </label>
 
               {errors.auth ? <p className="error">{errors.auth}</p> : null}

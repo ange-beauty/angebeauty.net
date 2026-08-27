@@ -17,6 +17,10 @@ export type AuthUser = {
   name: string;
   email: string;
   phone?: string;
+  addressLine: string;
+  addressComplement: string;
+  city: string;
+  provence: string;
   emailVerified: boolean;
 };
 
@@ -62,10 +66,24 @@ function mapMeToAuthUser(payload: any): AuthUser | null {
   const name = source.name || source.fullName || fullNameFromParts || source.username || source.displayName || source.email || "";
   const email = source.email || source.mail || source?.contact?.email || source?.user?.email || "";
   const phone = source.phone || source.mobile || source.telephone || undefined;
+  const addressLine = (source.address_line || source.addressLine || "").toString().trim();
+  const addressComplement = (source.address_complement || source.addressComplement || "").toString().trim();
+  const city = (source.city || "").toString().trim();
+  const provence = (source.provence || source.province || "").toString().trim();
   const emailVerified = toBoolean(source.email_verified);
 
   if (!email) return null;
-  return { id: id || email, name, email, phone, emailVerified };
+  return {
+    id: id || email,
+    name,
+    email,
+    phone,
+    addressLine,
+    addressComplement,
+    city,
+    provence,
+    emailVerified,
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
