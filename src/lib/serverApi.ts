@@ -226,7 +226,7 @@ export function mapCompetitionSnapshotProducts(snapshot: CompetitionSnapshot | n
 
 export async function fetchPublicOffersServer(): Promise<PublicOffer[]> {
   try {
-    const response = await serverFetch("/api/v1/offers/public");
+    const response = await serverFetch("/api/v1/offers/public", { cache: "no-store" });
     if (!response.ok) return [];
     const result = await response.json();
     if (!result || result.success !== true || !Array.isArray(result.data)) return [];
