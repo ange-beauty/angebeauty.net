@@ -25,7 +25,9 @@ export default function ProductCard({ product, hidePrice = false }: Props) {
   const available = getAvailableQuantityForSellingPoint(product, selectedSellingPoint?.id);
   const displayBrand = getDisplayBrand(product.brand);
   const href = productHref(product);
+  const canAddToBasket = Number.isFinite(product.price) && product.price > 0;
   const hasDiscount =
+    canAddToBasket &&
     typeof product.basePrice === "number" &&
     product.basePrice > product.price &&
     (product.discountAmount ?? product.basePrice - product.price) > 0;
@@ -56,12 +58,15 @@ export default function ProductCard({ product, hidePrice = false }: Props) {
           {!hidePrice ? (
             <div className="product-price-stack">
               {hasDiscount ? <p className="product-old-price">{formatPrice(product.basePrice!)}</p> : null}
-              <p className={`product-price ${hasDiscount ? "discounted" : ""}`}>{formatPrice(product.price)}</p>
+              <p className={`product-price ${hasDiscount ? "discounted" : ""}`}>
+                {canAddToBasket ? formatPrice(product.price) : "\u064a\u062a\u0648\u0641\u0631 \u0642\u0631\u064a\u0628\u0627\u064b"}
+              </p>
             </div>
           ) : <span />}
           <button
             className="product-basket-btn"
             aria-label="add to basket"
+            disabled={!canAddToBasket}
             onClick={() => {
               if (!selectedSellingPoint?.id) {
                 window.alert("يرجى اختيار نقطة البيع أولاً من صفحة المتجر.");
@@ -71,7 +76,7 @@ export default function ProductCard({ product, hidePrice = false }: Props) {
                 window.alert("لا يمكن إضافة كمية أكبر من المتوفر في المتجر المحدد.");
                 return;
               }
-              addToBasket(product.id, 1);
+              addToBasket(product, 1);
             }}
           >
             <ShoppingBagIcon color="#7E4A53" size={16} />

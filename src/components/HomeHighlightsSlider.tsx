@@ -12,7 +12,9 @@ export type OfferHeroSlide = {
   valueLabel: string;
   href: string;
   heroImage?: string;
+  fallbackImage?: string;
   hideText?: boolean;
+  showTextOnFallback?: boolean;
   products: Product[];
 };
 
@@ -23,6 +25,7 @@ type Props = {
 export default function HomeHighlightsSlider({ slides }: Props) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [fallbackSlides, setFallbackSlides] = useState<Set<string>>(() => new Set());
 
   const items = useMemo(() => slides.slice(0, 5), [slides]);
 
@@ -89,12 +92,15 @@ export default function HomeHighlightsSlider({ slides }: Props) {
 
       <div ref={trackRef} className="offer-hero-track" onScroll={handleTrackScroll}>
         {items.map((slide, index) => {
-          const heroImage = slide.heroImage || slide.products[0]?.image;
+          const isUsingFallback = fallbackSlides.has(slide.id);
+          const fallbackImage = slide.fallbackImage || slide.products[0]?.image;
+          const heroImage = isUsingFallback ? fallbackImage : slide.heroImage || fallbackImage;
+          const hideText = slide.hideText && !(isUsingFallback && slide.showTextOnFallback);
 
           return (
             <article key={slide.id} className="offer-hero-slide">
-              <Link href={slide.href} className={`offer-hero-link ${slide.hideText ? "offer-hero-image-only" : ""}`}>
-                {!slide.hideText ? (
+              <Link href={slide.href} className={`offer-hero-link ${hideText ? "offer-hero-image-only" : ""}`}>
+                {!hideText ? (
                   <div className="offer-hero-copy">
                     <h1>{slide.title}</h1>
                     <p className="offer-title">{slide.description}</p>
@@ -114,6 +120,11 @@ export default function HomeHighlightsSlider({ slides }: Props) {
                       className="offer-hero-image"
                       loading={activeIndex === index ? "eager" : "lazy"}
                       decoding="async"
+                      onError={() => {
+                        if (!isUsingFallback && fallbackImage && fallbackImage !== heroImage) {
+                          setFallbackSlides((current) => new Set(current).add(slide.id));
+                        }
+                      }}
                     />
                   ) : (
                     <div className="offer-visual-fallback">{slide.title.slice(0, 2)}</div>

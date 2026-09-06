@@ -9,7 +9,10 @@ type ProductsSearchParams = {
   barcode?: string;
   product?: string;
   category?: string;
+  tag?: string;
   focusSearch?: string;
+  hasActiveOffer?: string;
+  offerIds?: string;
 };
 
 export const metadata = {
@@ -28,6 +31,9 @@ export default async function ProductsPage({
   const barcode = (params.barcode || "").trim();
   const product = (params.product || "").trim();
   const category = (params.category || "").trim();
+  const tag = (params.tag || "").trim();
+  const offerIds = (params.offerIds || "").trim();
+  const hasActiveOffer = offerIds.length > 0 || ["1", "true"].includes((params.hasActiveOffer || "").trim().toLowerCase());
   const focusSearch = params.focusSearch === "1";
 
   const [productsResponse, brands, categories] = await Promise.all([
@@ -39,6 +45,9 @@ export default async function ProductsPage({
       barcode: barcode || undefined,
       product: product || undefined,
       category: category || undefined,
+      tag: tag || undefined,
+      hasActiveOffer: hasActiveOffer || undefined,
+      offerIds: offerIds || undefined,
     }),
     fetchBrandsServer(),
     fetchCategoriesServer(),
@@ -54,6 +63,9 @@ export default async function ProductsPage({
       if (barcode) query.set("barcode", barcode);
       if (product) query.set("product", product);
       if (category) query.set("category", category);
+      if (tag) query.set("tag", tag);
+      if (hasActiveOffer) query.set("hasActiveOffer", "true");
+      if (offerIds) query.set("offerIds", offerIds);
       if (params.focusSearch) query.set("focusSearch", params.focusSearch);
       const href = `/products/brand/${encodeURIComponent(selectedBrand.id)}/${encodeURIComponent(slug)}`;
       redirect(query.toString() ? `${href}?${query.toString()}` : href);
@@ -69,6 +81,9 @@ export default async function ProductsPage({
       initialBarcode={barcode}
       initialProduct={product}
       initialCategory={category}
+      initialTag={tag}
+      initialHasActiveOffer={hasActiveOffer}
+      initialOfferIds={offerIds}
       initialFocusSearch={focusSearch}
       brands={brands}
       categories={categories}

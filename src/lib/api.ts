@@ -27,7 +27,10 @@ export interface FetchProductsParams {
   brand?: string;
   barcode?: string;
   product?: string;
+  tag?: string;
   highlighted?: number | boolean;
+  hasActiveOffer?: boolean;
+  offerIds?: string;
 }
 
 export interface FetchProductsResponse {
@@ -37,21 +40,22 @@ export interface FetchProductsResponse {
 }
 
 export async function fetchProducts(params: FetchProductsParams = {}): Promise<FetchProductsResponse> {
-  const { page = 1, limit = 10, keyword, category, brand, barcode, product, highlighted } = params;
+  const { page = 1, limit = 10, keyword, category, brand, barcode, product, tag, highlighted, hasActiveOffer, offerIds } = params;
 
   try {
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    queryParams.append("no_zero_price", "true");
-    queryParams.append("products_with_brand", "true");
 
     if (keyword) queryParams.append("keyword", keyword);
     if (category) queryParams.append("category", category);
     if (brand) queryParams.append("brand", brand);
     if (barcode) queryParams.append("barcode", barcode);
     if (product) queryParams.append("product", product);
+    if (tag) queryParams.append("tag", tag);
     if (typeof highlighted !== "undefined") queryParams.append("highlighted", highlighted ? "1" : "0");
+    if (typeof hasActiveOffer !== "undefined") queryParams.append("has_active_offer", hasActiveOffer ? "1" : "0");
+    if (offerIds) queryParams.append("offer_ids", offerIds);
 
     const response = await fetch(`/api/v1/products?${queryParams.toString()}`, {
       method: "GET",

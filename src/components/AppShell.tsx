@@ -10,12 +10,15 @@ import {
   GridIcon,
   HomeIcon,
   PackageIcon,
+  PercentIcon,
   SearchIcon,
   ShoppingBagIcon,
   TagIcon,
   UserIcon,
   WhatsAppIcon,
 } from "@/components/Icons";
+
+const offerTab = { href: "/products?hasActiveOffer=true", label: "\u0639\u0631\u0648\u0636", icon: <PercentIcon size={28} strokeWidth={1.9} /> };
 
 const tabs = [
   { href: "/home", label: "اكتشف", icon: <HomeIcon size={29} /> },
@@ -26,6 +29,8 @@ const tabs = [
   { href: "/contact", label: "تواصل", icon: <WhatsAppIcon size={27} /> },
   { href: "/account", label: "حسابي", icon: <UserIcon size={29} strokeWidth={1.9} /> },
 ];
+
+tabs.splice(2, 0, offerTab);
 
 const standalonePaths = ["/turnstile-widget"];
 const noHeaderPaths = ["/basket", "/brands", "/categories", "/products", "/product", "/account", "/account-register"];

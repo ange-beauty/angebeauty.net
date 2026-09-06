@@ -14,6 +14,8 @@ type ProductsSearchParams = {
   product?: string;
   category?: string;
   focusSearch?: string;
+  hasActiveOffer?: string;
+  offerIds?: string;
 };
 
 export async function generateMetadata({
@@ -55,6 +57,8 @@ export default async function ProductsFilterPage({
   const barcode = (resolvedSearchParams.barcode || "").trim();
   const product = (resolvedSearchParams.product || "").trim();
   const category = (resolvedSearchParams.category || "").trim();
+  const offerIds = (resolvedSearchParams.offerIds || "").trim();
+  const hasActiveOffer = offerIds.length > 0 || ["1", "true"].includes((resolvedSearchParams.hasActiveOffer || "").trim().toLowerCase());
   const focusSearch = resolvedSearchParams.focusSearch === "1";
 
   const [productsResponse, brands, categories] = await Promise.all([
@@ -66,6 +70,8 @@ export default async function ProductsFilterPage({
       barcode: barcode || undefined,
       product: product || undefined,
       category: category || undefined,
+      hasActiveOffer: hasActiveOffer || undefined,
+      offerIds: offerIds || undefined,
     }),
     fetchBrandsServer(),
     fetchCategoriesServer(),
@@ -80,6 +86,8 @@ export default async function ProductsFilterPage({
       initialBarcode={barcode}
       initialProduct={product}
       initialCategory={category}
+      initialHasActiveOffer={hasActiveOffer}
+      initialOfferIds={offerIds}
       initialFocusSearch={focusSearch}
       brands={brands}
       categories={categories}

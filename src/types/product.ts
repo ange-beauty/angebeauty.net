@@ -52,6 +52,7 @@ export interface APIProduct {
   description_ar?: string | null;
   description_en?: string | null;
   images?: string | string[] | null;
+  images_version?: number | string | null;
   category?: string | null | { id: number; name?: string; name_ar?: string; name_en?: string };
   brand?: string | null;
   brand_id?: string | number | null;
@@ -105,7 +106,7 @@ function repairArabicMojibake(value?: string | null): string {
 
 function buildProductThumbUrl(apiProduct: APIProduct, fileName: string): string {
   const baseUrl = `https://images.angebeauty.net/angeapi/cdn/images/${apiProduct.id}/thumbs/${fileName}`;
-  const stableVersion = apiProduct.aggregate_version ?? apiProduct.last_updated_at;
+  const stableVersion = apiProduct.images_version ?? apiProduct.aggregate_version ?? apiProduct.last_updated_at;
 
   if (stableVersion === null || typeof stableVersion === "undefined" || stableVersion === "") {
     return baseUrl;
@@ -116,7 +117,7 @@ function buildProductThumbUrl(apiProduct: APIProduct, fileName: string): string 
 
 function buildProductImageUrl(apiProduct: APIProduct, fileName: string): string {
   const baseUrl = `https://images.angebeauty.net/angeapi/cdn/images/${apiProduct.id}/${fileName}`;
-  const stableVersion = apiProduct.aggregate_version ?? apiProduct.last_updated_at;
+  const stableVersion = apiProduct.images_version ?? apiProduct.aggregate_version ?? apiProduct.last_updated_at;
 
   if (stableVersion === null || typeof stableVersion === "undefined" || stableVersion === "") {
     return baseUrl;

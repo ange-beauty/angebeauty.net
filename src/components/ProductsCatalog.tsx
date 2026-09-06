@@ -16,6 +16,9 @@ type Props = {
   initialBarcode: string;
   initialProduct: string;
   initialCategory: string;
+  initialTag?: string;
+  initialHasActiveOffer: boolean;
+  initialOfferIds: string;
   initialFocusSearch: boolean;
   brands: Brand[];
   categories: Category[];
@@ -58,6 +61,9 @@ export default function ProductsCatalog({
   initialBarcode,
   initialProduct,
   initialCategory,
+  initialTag = "",
+  initialHasActiveOffer,
+  initialOfferIds,
   initialFocusSearch,
   brands,
   categories,
@@ -78,6 +84,7 @@ export default function ProductsCatalog({
   const [draftCategories, setDraftCategories] = useState<string[]>(
     initialCategory.split(",").map((item) => item.trim()).filter(Boolean),
   );
+  const [draftHasActiveOffer, setDraftHasActiveOffer] = useState(initialHasActiveOffer);
   const [activeBrandLetter, setActiveBrandLetter] = useState(BRAND_ALL_FILTER);
 
   useEffect(() => {
@@ -91,7 +98,8 @@ export default function ProductsCatalog({
     setDraftBrand(initialBrand);
     setDraftBarcode(initialBarcode);
     setDraftCategories(initialCategory.split(",").map((item) => item.trim()).filter(Boolean));
-  }, [initialBarcode, initialBrand, initialCategory, initialHasMore, initialKeyword, initialProducts]);
+    setDraftHasActiveOffer(initialHasActiveOffer);
+  }, [initialBarcode, initialBrand, initialCategory, initialHasActiveOffer, initialHasMore, initialKeyword, initialProducts, initialTag]);
 
   useEffect(() => {
     if (initialFocusSearch) {
@@ -154,6 +162,9 @@ export default function ProductsCatalog({
         barcode: initialBarcode || undefined,
         product: initialProduct || undefined,
         category: initialCategory || undefined,
+        tag: initialTag || undefined,
+        hasActiveOffer: initialHasActiveOffer || undefined,
+        offerIds: initialOfferIds || undefined,
       });
 
       if (cancelled) return;
@@ -183,7 +194,7 @@ export default function ProductsCatalog({
     return () => {
       cancelled = true;
     };
-  }, [initialBarcode, initialBrand, initialCategory, initialKeyword, initialProduct, isLoadingMore, page]);
+  }, [initialBarcode, initialBrand, initialCategory, initialHasActiveOffer, initialKeyword, initialOfferIds, initialProduct, initialTag, isLoadingMore, page]);
 
   function pushProductsRoute(next: {
     keyword?: string;
@@ -191,12 +202,18 @@ export default function ProductsCatalog({
     brand?: string;
     product?: string;
     category?: string;
+    tag?: string;
+    hasActiveOffer?: boolean;
+    offerIds?: string;
   }) {
     const query = new URLSearchParams();
     if (next.keyword?.trim()) query.set("keyword", next.keyword.trim());
     if (next.barcode?.trim()) query.set("barcode", next.barcode.trim());
     if (next.product?.trim()) query.set("product", next.product.trim());
     if (next.category?.trim()) query.set("category", next.category.trim());
+    if (next.tag?.trim()) query.set("tag", next.tag.trim());
+    if (next.hasActiveOffer) query.set("hasActiveOffer", "true");
+    if (next.offerIds?.trim()) query.set("offerIds", next.offerIds.trim());
 
     const selectedBrand = brands.find((brand) => brand.id === next.brand?.trim());
     const basePath = selectedBrand ? brandFilterPath(selectedBrand) : "/products";
@@ -211,6 +228,9 @@ export default function ProductsCatalog({
       brand: draftBrand,
       product: initialProduct,
       category: draftCategories.join(","),
+      tag: initialTag,
+      hasActiveOffer: draftHasActiveOffer,
+      offerIds: draftHasActiveOffer ? initialOfferIds : "",
     });
   }
 
@@ -219,6 +239,7 @@ export default function ProductsCatalog({
     setDraftBrand("");
     setDraftBarcode("");
     setDraftCategories([]);
+    setDraftHasActiveOffer(false);
     setKeywordInput("");
     setIsFilterOpen(false);
     router.push("/products");
@@ -233,6 +254,9 @@ export default function ProductsCatalog({
       brand: initialBrand,
       product: initialProduct,
       category: initialCategory,
+      tag: initialTag,
+      hasActiveOffer: initialHasActiveOffer,
+      offerIds: initialOfferIds,
     });
   }
 
@@ -245,9 +269,9 @@ export default function ProductsCatalog({
   const selectedCategories = selectedCategoryIds
     .map((id) => categories.find((category) => category.id === id))
     .filter((category): category is Category => Boolean(category));
-  const hasActiveFilters = Boolean(initialKeyword || initialBrand || initialBarcode || initialProduct || initialCategory);
+  const hasActiveFilters = Boolean(initialKeyword || initialBrand || initialBarcode || initialProduct || initialCategory || initialTag || initialHasActiveOffer);
 
-  function removeFilter(filter: "keyword" | "brand" | "barcode" | "product" | "category", categoryId?: string) {
+  function removeFilter(filter: "keyword" | "brand" | "barcode" | "product" | "category" | "tag" | "offer", categoryId?: string) {
     const nextCategory =
       filter === "category" && categoryId
         ? selectedCategoryIds.filter((id) => id !== categoryId).join(",")
@@ -266,6 +290,9 @@ export default function ProductsCatalog({
       brand: filter === "brand" ? "" : initialBrand,
       product: filter === "product" ? "" : initialProduct,
       category: nextCategory,
+      tag: filter === "tag" ? "" : initialTag,
+      hasActiveOffer: filter === "offer" ? false : initialHasActiveOffer,
+      offerIds: filter === "offer" ? "" : initialOfferIds,
     });
   }
 
@@ -345,6 +372,18 @@ export default function ProductsCatalog({
                 <strong aria-hidden="true">×</strong>
               </button>
             ) : null}
+            {initialTag ? (
+              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("tag")}>
+                <span>{'\u0648\u0633\u0645'}</span>
+                <strong aria-hidden="true">×</strong>
+              </button>
+            ) : null}
+            {initialHasActiveOffer ? (
+              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("offer")}>
+                <span>{initialOfferIds ? "عروض محددة" : "منتجات عليها عروض"}</span>
+                <strong aria-hidden="true">×</strong>
+              </button>
+            ) : null}
             {selectedCategories.map((category) => (
               <button key={category.id} type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("category", category.id)}>
                 <span>{getCategoryLabel(category)}</span>
@@ -383,6 +422,20 @@ export default function ProductsCatalog({
             </div>
 
             <div className="products-modal-body">
+              <section className="products-filter-section">
+                <div className="products-section-head">
+                  <h3>العروض</h3>
+                </div>
+                <label className="products-offer-filter">
+                  <input
+                    type="checkbox"
+                    checked={draftHasActiveOffer}
+                    onChange={(event) => setDraftHasActiveOffer(event.target.checked)}
+                  />
+                  <span>المنتجات المشمولة بعرض فعال</span>
+                </label>
+              </section>
+
               <section className="products-filter-section">
                 <div className="products-section-head">
                   <h3>الباركود</h3>

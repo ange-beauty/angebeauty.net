@@ -57,6 +57,13 @@ export default function BasketPage() {
       return { ...product, quantity: item.quantity };
     })
     .filter((item): item is NonNullable<typeof item> => !!item);
+  const zeroPriceProductId = products.find(
+    (product) => !Number.isFinite(product.price) || product.price <= 0,
+  )?.id;
+
+  useEffect(() => {
+    if (zeroPriceProductId) removeFromBasket(zeroPriceProductId);
+  }, [zeroPriceProductId, removeFromBasket]);
 
   const totalPrice = useMemo(
     () => products.reduce((sum, item) => sum + item.price * item.quantity, 0),

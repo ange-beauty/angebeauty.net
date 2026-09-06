@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getStorageItem, setStorageItem } from "@/lib/storage";
+import type { Product } from "@/types/product";
 
 const BASKET_KEY = "cosmetics_basket";
 
@@ -13,7 +14,7 @@ export interface BasketItem {
 
 type BasketContextValue = {
   basket: BasketItem[];
-  addToBasket: (productId: string, quantity?: number) => void;
+  addToBasket: (product: Product, quantity?: number) => boolean;
   removeFromBasket: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearBasket: () => void;
@@ -42,7 +43,10 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
     setStorageItem(BASKET_KEY, JSON.stringify(nextBasket));
   }, []);
 
-  const addToBasket = useCallback((productId: string, quantity = 1) => {
+  const addToBasket = useCallback((product: Product, quantity = 1) => {
+    if (!Number.isFinite(product.price) || product.price <= 0) return false;
+
+    const productId = product.id;
     const existingIndex = basket.findIndex((item) => item.productId === productId);
     let updated: BasketItem[];
     if (existingIndex >= 0) {
@@ -52,6 +56,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       updated = [...basket, { productId, quantity, addedAt: Date.now() }];
     }
     persist(updated);
+    return true;
   }, [basket, persist]);
 
   const removeFromBasket = useCallback((productId: string) => {

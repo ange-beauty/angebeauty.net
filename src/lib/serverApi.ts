@@ -17,6 +17,8 @@ export type ServerFetchProductsParams = {
   barcode?: string;
   product?: string;
   highlighted?: number | boolean;
+  hasActiveOffer?: boolean;
+  offerIds?: string;
 };
 
 export type PublicCategory = {
@@ -25,6 +27,12 @@ export type PublicCategory = {
   category_name_en?: string | null;
   parent_category?: string | null;
   aggregate_version?: number | string | null;
+};
+
+export type PublicTag = {
+  id: string;
+  tag_name_ar?: string | null;
+  tag_name_en?: string | null;
 };
 
 export type ServerFetchProductsResponse = {
@@ -142,12 +150,10 @@ async function serverFetch(path: string, init?: RequestInit & { next?: { revalid
 export async function fetchProductsServer(
   params: ServerFetchProductsParams = {},
 ): Promise<ServerFetchProductsResponse> {
-  const { page = 1, limit = 20, keyword, category, brand, tag, barcode, product, highlighted } = params;
+  const { page = 1, limit = 20, keyword, category, brand, tag, barcode, product, highlighted, hasActiveOffer, offerIds } = params;
   const queryParams = new URLSearchParams();
   queryParams.append("page", page.toString());
   queryParams.append("limit", limit.toString());
-  queryParams.append("no_zero_price", "true");
-  queryParams.append("products_with_brand", "true");
   if (keyword) queryParams.append("keyword", keyword);
   if (category) queryParams.append("category", category);
   if (brand) queryParams.append("brand", brand);
@@ -157,6 +163,10 @@ export async function fetchProductsServer(
   if (typeof highlighted !== "undefined") {
     queryParams.append("highlighted", highlighted ? "1" : "0");
   }
+  if (typeof hasActiveOffer !== "undefined") {
+    queryParams.append("has_active_offer", hasActiveOffer ? "1" : "0");
+  }
+  if (offerIds) queryParams.append("offer_ids", offerIds);
 
   try {
     const response = await serverFetch(`/api/v1/products?${queryParams.toString()}`);
@@ -254,6 +264,25 @@ export async function fetchBrandsServer(): Promise<
     if (!isSuccess || !result.data) return [];
     const brands = Array.isArray(result.data) ? result.data : [];
     return brands.filter((brand: any) => brand && brand.id && brand.brand_name_ar);
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchTagsWithProductsServer(): Promise<PublicTag[]> {
+  try {
+    const response = await serverFetch("/api/v1/tags?is_active=1&has_products=1");
+    if (!response.ok) return [];
+    const result = await response.json();
+    if (!result || result.success !== true || !Array.isArray(result.data)) return [];
+
+    return result.data
+      .filter((tag: any) => tag?.id && (tag.tag_name_ar || tag.tag_name_en))
+      .map((tag: any) => ({
+        id: String(tag.id),
+        tag_name_ar: tag.tag_name_ar || null,
+        tag_name_en: tag.tag_name_en || null,
+      }));
   } catch {
     return [];
   }

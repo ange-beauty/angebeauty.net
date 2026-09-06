@@ -72,6 +72,16 @@ export function TagIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: 
   );
 }
 
+export function PercentIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M19 5 5 19" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
+      <circle cx="7" cy="7" r="2.25" stroke={color} strokeWidth={strokeWidth} />
+      <circle cx="17" cy="17" r="2.25" stroke={color} strokeWidth={strokeWidth} />
+    </svg>
+  );
+}
+
 export function BellIcon({ size = 18, color = "currentColor", strokeWidth = 2 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
