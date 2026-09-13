@@ -8,12 +8,15 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 import { useSellingPoint } from "@/contexts/SellingPointContext";
 import { formatPrice } from "@/lib/formatPrice";
 import type { Product } from "@/types/product";
+import type { ProductVariationGroup } from "@/types/productVariations";
+import ProductVariationSelector from "@/components/ProductVariationSelector";
 
 type Props = {
   product: Product;
+  variationGroup?: ProductVariationGroup | null;
 };
 
-export default function ProductDetailsView({ product }: Props) {
+export default function ProductDetailsView({ product, variationGroup }: Props) {
   const [isImageOpen, setIsImageOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { addToBasket, getItemQuantity } = useBasket();
@@ -72,6 +75,7 @@ export default function ProductDetailsView({ product }: Props) {
             <span className="product-chip">{product.brand}</span>
           </div>
           <h1 className="product-detail-title">{product.name}</h1>
+          {variationGroup && <ProductVariationSelector group={variationGroup} productId={product.id} />}
           <div className="product-price-box">
             <p className="product-price-label">{'\u0627\u0644\u0633\u0639\u0631'}</p>
             {hasDiscount ? <p className="product-detail-old-price">{formatPrice(product.basePrice!)}</p> : null}

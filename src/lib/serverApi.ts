@@ -1,5 +1,15 @@
 import { mapAPIProductToProduct, type APIProduct, type Product } from "@/types/product";
 import { withClientSourceHeader } from "@/lib/requestHeaders";
+import type { ProductVariationGroup } from "@/types/productVariations";
+
+export async function fetchProductVariationsServer(productId: string): Promise<ProductVariationGroup | null> {
+  try {
+    const response = await serverFetch(`/api/v1/product-groups?product_id=${encodeURIComponent(productId)}`, { cache: "no-store" });
+    if (!response.ok) return null;
+    const result = await response.json();
+    return result.data?.[0] || null;
+  } catch { return null; }
+}
 
 const API_BASE_URL =
   process.env.API_BASE_URL ||

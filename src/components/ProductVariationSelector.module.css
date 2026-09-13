@@ -1,0 +1,10 @@
+.root { margin: 16px 0; min-width: 0; }
+.option { border: 0; padding: 0; margin: 12px 0; min-width: 0; }
+.option legend { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.values { display: flex; flex-wrap: wrap; gap: 8px; }
+.value { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; min-height: 44px; max-width: 100%; border: 1px solid #ddd; border-radius: 6px; color: inherit; background: #fff; text-decoration: none; font-size: 14px; overflow-wrap: anywhere; }
+.value[aria-current="true"] { border-color: #7b4a56; outline: 1px solid #7b4a56; }
+.value[aria-disabled="true"] { opacity: .4; }
+.value:focus-visible { outline: 2px solid #7b4a56; outline-offset: 3px; }
+.swatch { width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; border: 1px solid #bbb; }
+.image { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }

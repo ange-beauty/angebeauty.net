@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductDetailsView from "@/components/ProductDetailsView";
-import { fetchProductByIdServer } from "@/lib/serverApi";
+import { fetchProductByIdServer, fetchProductVariationsServer } from "@/lib/serverApi";
 
 export async function generateMetadata({
   params,
@@ -37,5 +37,6 @@ export default async function ProductDetailsPage({
     notFound();
   }
 
-  return <ProductDetailsView product={product} />;
+  const variationGroup = await fetchProductVariationsServer(id);
+  return <ProductDetailsView product={product} variationGroup={variationGroup} />;
 }

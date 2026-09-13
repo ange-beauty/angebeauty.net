@@ -868,6 +868,9 @@ body {
 }
 
 .categories-selection-bar {
+  position: sticky;
+  top: 76px;
+  z-index: 14;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -876,7 +879,9 @@ body {
   padding: 12px 14px;
   border: 1px solid #e8dce0;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 20px rgba(58, 36, 42, 0.08);
+  backdrop-filter: blur(12px);
 }
 
 .categories-selection-status {
