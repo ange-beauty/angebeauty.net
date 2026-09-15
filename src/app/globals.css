@@ -2959,6 +2959,58 @@ body {
   gap: 12px;
 }
 
+.account-profile-form {
+  background: #fff;
+  border: 1px solid #e4d8db;
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.account-profile-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.account-address-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.account-address-field {
+  display: grid;
+  gap: 6px;
+  color: #4c3b3f;
+  font-weight: 700;
+}
+
+.account-address-wide {
+  grid-column: 1 / -1;
+}
+
+.account-profile-success {
+  margin: 0;
+  color: #287a45;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .account-profile-form {
+    padding: 14px;
+  }
+
+  .account-address-form {
+    grid-template-columns: 1fr;
+  }
+
+  .account-address-wide {
+    grid-column: auto;
+  }
+}
+
 .account-profile-card {
   background: #f2eff0;
   border: 1px solid #e4d8db;

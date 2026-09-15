@@ -8,6 +8,7 @@ import {
   me as authMe,
   register as authRegister,
   sendEmailVerification as authSendEmailVerification,
+  updateProfile as authUpdateProfile,
 } from "@/lib/auth";
 import { ApiHttpError } from "@/lib/httpClient";
 import { getArabicApiErrorMessage } from "@/lib/apiErrorMessages";
@@ -41,6 +42,12 @@ type AuthContextValue = {
   logout: () => Promise<void>;
   resendEmailVerification: () => Promise<{ success: boolean; message: string }>;
   refreshSession: () => Promise<AuthUser | null>;
+  updateProfile: (payload: {
+    address_line: string;
+    address_complement: string;
+    city: string;
+    provence: string;
+  }) => Promise<{ success: boolean; message: string }>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -178,6 +185,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (payload: {
+    address_line: string;
+    address_complement: string;
+    city: string;
+    provence: string;
+  }) => {
+    try {
+      await authUpdateProfile({ ...payload, country: "العراق" });
+      await resolveSession();
+      return { success: true, message: "تم تحديث العنوان بنجاح." };
+    } catch (error: any) {
+      const message = error instanceof ApiHttpError
+        ? getArabicApiErrorMessage(error.body, "تعذر تحديث العنوان.")
+        : "تعذر الاتصال بالخادم. يرجى المحاولة مجدداً.";
+      return { success: false, message };
+    }
+  }, [resolveSession]);
+
   const value = useMemo(
     () => ({
       user,
@@ -188,8 +213,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       resendEmailVerification,
       refreshSession: resolveSession,
+      updateProfile,
     }),
-    [user, isLoading, login, register, logout, resendEmailVerification, resolveSession],
+    [user, isLoading, login, register, logout, resendEmailVerification, resolveSession, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

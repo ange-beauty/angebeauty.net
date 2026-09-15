@@ -16,6 +16,14 @@ export type RegisterPayload = {
   security_token?: string | null;
 };
 
+export type UpdateProfilePayload = {
+  address_line: string;
+  address_complement: string;
+  city: string;
+  provence: string;
+  country: string;
+};
+
 export async function login(payload: LoginPayload): Promise<any> {
   return apiFetch("/api/v1/auth/token", {
     method: "POST",
@@ -48,6 +56,14 @@ export async function register(payload: RegisterPayload): Promise<any> {
 
 export async function me(): Promise<any> {
   return apiFetch("/api/v1/auth/me");
+}
+
+export async function updateProfile(payload: UpdateProfilePayload): Promise<any> {
+  return apiFetch("/api/v1/auth/me", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function refresh(): Promise<any> {

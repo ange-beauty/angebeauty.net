@@ -110,14 +110,14 @@ export default function AccountPage() {
           </section>
 
           <section className="account-menu">
-            <div className="account-menu-item">
+            <Link href="/account-profile" className="account-menu-item">
               <span className="account-menu-leading"><UserIcon size={18} strokeWidth={1.8} /></span>
               <div className="account-menu-text">
                 <p className="account-menu-title">معلوماتي الشخصية</p>
                 <p className="account-menu-subtitle">{user.email || "لا يوجد بريد إلكتروني"}</p>
               </div>
               <span className="account-menu-trailing"><HeartIcon size={18} strokeWidth={1.8} /></span>
-            </div>
+            </Link>
 
             <Link href="/favorites" className="account-menu-item">
               <span className="account-menu-leading"><HeartIcon size={18} strokeWidth={1.8} /></span>
