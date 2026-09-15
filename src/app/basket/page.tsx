@@ -14,6 +14,7 @@ import { getAvailableQuantityForSellingPoint } from "@/lib/availability";
 import TurnstileWidget from "@/components/TurnstileWidget";
 
 type CheckoutMode = "closed" | "guest" | "auth";
+type ProvenceOption = { id: string; name_ar: string; name_en?: string | null };
 
 export default function BasketPage() {
   const { basket, updateQuantity, removeFromBasket, clearBasket } = useBasket();
@@ -24,6 +25,7 @@ export default function BasketPage() {
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
   const [provence, setProvence] = useState("");
+  const [provences, setProvences] = useState<ProvenceOption[]>([]);
   const [city, setCity] = useState("");
   const [addressLine, setAddressLine] = useState("");
   const [addressComplement, setAddressComplement] = useState("");
@@ -41,6 +43,20 @@ export default function BasketPage() {
     setAddressLine(user?.addressLine || "");
     setAddressComplement(user?.addressComplement || "");
   }, [user]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/v1/locations/provences?country_id=country-iq", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((body) => setProvences(Array.isArray(body?.data) ? body.data : []))
+      .catch(() => {
+        if (!controller.signal.aborted) setProvences([]);
+      });
+    return () => controller.abort();
+  }, []);
 
   const productQueries = useQueries({
     queries: basket.map((item) => ({
@@ -192,6 +208,7 @@ export default function BasketPage() {
           name: name.trim(),
           ...(checkoutMode === "auth" ? { email: email.trim() } : {}),
           telephone: telephone.trim(),
+          country: "العراق",
           provence: provence.trim(),
           city: city.trim(),
           address_line: addressLine.trim(),
@@ -380,7 +397,15 @@ export default function BasketPage() {
 
               <label className="basket-field">
                 <span>المحافظة *</span>
-                <input className="input" placeholder="أدخلي المحافظة" value={provence} onChange={(event) => setProvence(event.target.value)} />
+                <select className="input" value={provence} onChange={(event) => setProvence(event.target.value)}>
+                  <option value="">اختاري المحافظة</option>
+                  {provence && !provences.some((item) => item.name_ar === provence) ? (
+                    <option value={provence}>{provence}</option>
+                  ) : null}
+                  {provences.map((item) => (
+                    <option key={item.id} value={item.name_ar}>{item.name_ar}</option>
+                  ))}
+                </select>
                 {errors.provence ? <p className="error">{errors.provence}</p> : null}
               </label>
 
