@@ -71,8 +71,8 @@ export default function ProductDetailsView({ product, variationGroup }: Props) {
 
         <article className="product-info-panel">
           <div className="product-info-top">
-            <span className="product-chip">{product.category}</span>
-            <span className="product-chip">{product.brand}</span>
+            {product.category ? <span className="product-chip">{product.category}</span> : null}
+            {product.brand ? <span className="product-chip">{product.brand}</span> : null}
           </div>
           <h1 className="product-detail-title">{product.name}</h1>
           {variationGroup && <ProductVariationSelector group={variationGroup} productId={product.id} />}
