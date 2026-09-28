@@ -15,6 +15,7 @@ type ProductsSearchParams = {
   category?: string;
   focusSearch?: string;
   hasActiveOffer?: string;
+  newStockArrivals?: string;
   offerIds?: string;
 };
 
@@ -59,6 +60,7 @@ export default async function ProductsFilterPage({
   const category = (resolvedSearchParams.category || "").trim();
   const offerIds = (resolvedSearchParams.offerIds || "").trim();
   const hasActiveOffer = offerIds.length > 0 || ["1", "true"].includes((resolvedSearchParams.hasActiveOffer || "").trim().toLowerCase());
+  const newStockArrivals = ["1", "true"].includes((resolvedSearchParams.newStockArrivals || "").trim().toLowerCase());
   const focusSearch = resolvedSearchParams.focusSearch === "1";
 
   const [productsResponse, brands, categories] = await Promise.all([
@@ -71,6 +73,7 @@ export default async function ProductsFilterPage({
       product: product || undefined,
       category: category || undefined,
       hasActiveOffer: hasActiveOffer || undefined,
+      newStockArrivals: newStockArrivals || undefined,
       offerIds: offerIds || undefined,
     }),
     fetchBrandsServer(),
@@ -87,6 +90,7 @@ export default async function ProductsFilterPage({
       initialProduct={product}
       initialCategory={category}
       initialHasActiveOffer={hasActiveOffer}
+      initialNewStockArrivals={newStockArrivals}
       initialOfferIds={offerIds}
       initialFocusSearch={focusSearch}
       brands={brands}

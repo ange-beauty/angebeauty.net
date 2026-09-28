@@ -18,6 +18,7 @@ type Props = {
   initialCategory: string;
   initialTag?: string;
   initialHasActiveOffer: boolean;
+  initialNewStockArrivals: boolean;
   initialOfferIds: string;
   initialFocusSearch: boolean;
   brands: Brand[];
@@ -63,6 +64,7 @@ export default function ProductsCatalog({
   initialCategory,
   initialTag = "",
   initialHasActiveOffer,
+  initialNewStockArrivals,
   initialOfferIds,
   initialFocusSearch,
   brands,
@@ -85,6 +87,7 @@ export default function ProductsCatalog({
     initialCategory.split(",").map((item) => item.trim()).filter(Boolean),
   );
   const [draftHasActiveOffer, setDraftHasActiveOffer] = useState(initialHasActiveOffer);
+  const [draftNewStockArrivals, setDraftNewStockArrivals] = useState(initialNewStockArrivals);
   const [activeBrandLetter, setActiveBrandLetter] = useState(BRAND_ALL_FILTER);
 
   useEffect(() => {
@@ -99,7 +102,8 @@ export default function ProductsCatalog({
     setDraftBarcode(initialBarcode);
     setDraftCategories(initialCategory.split(",").map((item) => item.trim()).filter(Boolean));
     setDraftHasActiveOffer(initialHasActiveOffer);
-  }, [initialBarcode, initialBrand, initialCategory, initialHasActiveOffer, initialHasMore, initialKeyword, initialProducts, initialTag]);
+    setDraftNewStockArrivals(initialNewStockArrivals);
+  }, [initialBarcode, initialBrand, initialCategory, initialHasActiveOffer, initialHasMore, initialKeyword, initialNewStockArrivals, initialProducts, initialTag]);
 
   useEffect(() => {
     if (initialFocusSearch) {
@@ -164,6 +168,7 @@ export default function ProductsCatalog({
         category: initialCategory || undefined,
         tag: initialTag || undefined,
         hasActiveOffer: initialHasActiveOffer || undefined,
+        newStockArrivals: initialNewStockArrivals || undefined,
         offerIds: initialOfferIds || undefined,
       });
 
@@ -194,7 +199,7 @@ export default function ProductsCatalog({
     return () => {
       cancelled = true;
     };
-  }, [initialBarcode, initialBrand, initialCategory, initialHasActiveOffer, initialKeyword, initialOfferIds, initialProduct, initialTag, isLoadingMore, page]);
+  }, [initialBarcode, initialBrand, initialCategory, initialHasActiveOffer, initialKeyword, initialNewStockArrivals, initialOfferIds, initialProduct, initialTag, isLoadingMore, page]);
 
   function pushProductsRoute(next: {
     keyword?: string;
@@ -204,6 +209,7 @@ export default function ProductsCatalog({
     category?: string;
     tag?: string;
     hasActiveOffer?: boolean;
+    newStockArrivals?: boolean;
     offerIds?: string;
   }) {
     const query = new URLSearchParams();
@@ -213,6 +219,7 @@ export default function ProductsCatalog({
     if (next.category?.trim()) query.set("category", next.category.trim());
     if (next.tag?.trim()) query.set("tag", next.tag.trim());
     if (next.hasActiveOffer) query.set("hasActiveOffer", "true");
+    if (next.newStockArrivals) query.set("newStockArrivals", "true");
     if (next.offerIds?.trim()) query.set("offerIds", next.offerIds.trim());
 
     const selectedBrand = brands.find((brand) => brand.id === next.brand?.trim());
@@ -230,6 +237,7 @@ export default function ProductsCatalog({
       category: draftCategories.join(","),
       tag: initialTag,
       hasActiveOffer: draftHasActiveOffer,
+      newStockArrivals: draftNewStockArrivals,
       offerIds: draftHasActiveOffer ? initialOfferIds : "",
     });
   }
@@ -240,6 +248,7 @@ export default function ProductsCatalog({
     setDraftBarcode("");
     setDraftCategories([]);
     setDraftHasActiveOffer(false);
+    setDraftNewStockArrivals(false);
     setKeywordInput("");
     setIsFilterOpen(false);
     router.push("/products");
@@ -256,6 +265,7 @@ export default function ProductsCatalog({
       category: initialCategory,
       tag: initialTag,
       hasActiveOffer: initialHasActiveOffer,
+      newStockArrivals: initialNewStockArrivals,
       offerIds: initialOfferIds,
     });
   }
@@ -269,9 +279,9 @@ export default function ProductsCatalog({
   const selectedCategories = selectedCategoryIds
     .map((id) => categories.find((category) => category.id === id))
     .filter((category): category is Category => Boolean(category));
-  const hasActiveFilters = Boolean(initialKeyword || initialBrand || initialBarcode || initialProduct || initialCategory || initialTag || initialHasActiveOffer);
+  const hasActiveFilters = Boolean(initialKeyword || initialBrand || initialBarcode || initialProduct || initialCategory || initialTag || initialHasActiveOffer || initialNewStockArrivals);
 
-  function removeFilter(filter: "keyword" | "brand" | "barcode" | "product" | "category" | "tag" | "offer", categoryId?: string) {
+  function removeFilter(filter: "keyword" | "brand" | "barcode" | "product" | "category" | "tag" | "offer" | "newStock", categoryId?: string) {
     const nextCategory =
       filter === "category" && categoryId
         ? selectedCategoryIds.filter((id) => id !== categoryId).join(",")
@@ -292,6 +302,7 @@ export default function ProductsCatalog({
       category: nextCategory,
       tag: filter === "tag" ? "" : initialTag,
       hasActiveOffer: filter === "offer" ? false : initialHasActiveOffer,
+      newStockArrivals: filter === "newStock" ? false : initialNewStockArrivals,
       offerIds: filter === "offer" ? "" : initialOfferIds,
     });
   }
@@ -384,6 +395,12 @@ export default function ProductsCatalog({
                 <strong aria-hidden="true">×</strong>
               </button>
             ) : null}
+            {initialNewStockArrivals ? (
+              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("newStock")}>
+                <span>{"\u0648\u0635\u0644 \u062d\u062f\u064a\u062b\u0627\u064b"}</span>
+                <strong aria-hidden="true">{"\u00d7"}</strong>
+              </button>
+            ) : null}
             {selectedCategories.map((category) => (
               <button key={category.id} type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("category", category.id)}>
                 <span>{getCategoryLabel(category)}</span>
@@ -422,6 +439,19 @@ export default function ProductsCatalog({
             </div>
 
             <div className="products-modal-body">
+              <section className="products-filter-section">
+                <div className="products-section-head">
+                  <h3>{"\u0627\u0644\u0645\u062e\u0632\u0648\u0646"}</h3>
+                </div>
+                <label className="products-offer-filter">
+                  <input
+                    type="checkbox"
+                    checked={draftNewStockArrivals}
+                    onChange={(event) => setDraftNewStockArrivals(event.target.checked)}
+                  />
+                  <span>{"\u0645\u0646\u062a\u062c\u0627\u062a \u0648\u0635\u0644\u062a \u062e\u0644\u0627\u0644 \u0622\u062e\u0631 14 \u064a\u0648\u0645\u0627\u064b"}</span>
+                </label>
+              </section>
               <section className="products-filter-section">
                 <div className="products-section-head">
                   <h3>العروض</h3>

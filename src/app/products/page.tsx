@@ -12,6 +12,7 @@ type ProductsSearchParams = {
   tag?: string;
   focusSearch?: string;
   hasActiveOffer?: string;
+  newStockArrivals?: string;
   offerIds?: string;
 };
 
@@ -34,6 +35,7 @@ export default async function ProductsPage({
   const tag = (params.tag || "").trim();
   const offerIds = (params.offerIds || "").trim();
   const hasActiveOffer = offerIds.length > 0 || ["1", "true"].includes((params.hasActiveOffer || "").trim().toLowerCase());
+  const newStockArrivals = ["1", "true"].includes((params.newStockArrivals || "").trim().toLowerCase());
   const focusSearch = params.focusSearch === "1";
 
   const [productsResponse, brands, categories] = await Promise.all([
@@ -47,6 +49,7 @@ export default async function ProductsPage({
       category: category || undefined,
       tag: tag || undefined,
       hasActiveOffer: hasActiveOffer || undefined,
+      newStockArrivals: newStockArrivals || undefined,
       offerIds: offerIds || undefined,
     }),
     fetchBrandsServer(),
@@ -65,6 +68,7 @@ export default async function ProductsPage({
       if (category) query.set("category", category);
       if (tag) query.set("tag", tag);
       if (hasActiveOffer) query.set("hasActiveOffer", "true");
+      if (newStockArrivals) query.set("newStockArrivals", "true");
       if (offerIds) query.set("offerIds", offerIds);
       if (params.focusSearch) query.set("focusSearch", params.focusSearch);
       const href = `/products/brand/${encodeURIComponent(selectedBrand.id)}/${encodeURIComponent(slug)}`;
@@ -83,6 +87,7 @@ export default async function ProductsPage({
       initialCategory={category}
       initialTag={tag}
       initialHasActiveOffer={hasActiveOffer}
+      initialNewStockArrivals={newStockArrivals}
       initialOfferIds={offerIds}
       initialFocusSearch={focusSearch}
       brands={brands}

@@ -28,6 +28,7 @@ export type ServerFetchProductsParams = {
   product?: string;
   highlighted?: number | boolean;
   hasActiveOffer?: boolean;
+  newStockArrivals?: boolean;
   offerIds?: string;
 };
 
@@ -160,7 +161,7 @@ async function serverFetch(path: string, init?: RequestInit & { next?: { revalid
 export async function fetchProductsServer(
   params: ServerFetchProductsParams = {},
 ): Promise<ServerFetchProductsResponse> {
-  const { page = 1, limit = 20, keyword, category, brand, tag, barcode, product, highlighted, hasActiveOffer, offerIds } = params;
+  const { page = 1, limit = 20, keyword, category, brand, tag, barcode, product, highlighted, hasActiveOffer, newStockArrivals, offerIds } = params;
   const queryParams = new URLSearchParams();
   queryParams.append("page", page.toString());
   queryParams.append("limit", limit.toString());
@@ -175,6 +176,9 @@ export async function fetchProductsServer(
   }
   if (typeof hasActiveOffer !== "undefined") {
     queryParams.append("has_active_offer", hasActiveOffer ? "1" : "0");
+  }
+  if (typeof newStockArrivals !== "undefined") {
+    queryParams.append("new_stock_arrivals", newStockArrivals ? "1" : "0");
   }
   if (offerIds) queryParams.append("offer_ids", offerIds);
 
