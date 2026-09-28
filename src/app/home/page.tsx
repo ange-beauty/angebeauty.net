@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import HomeHighlightsSlider, { type OfferHeroSlide } from "@/components/HomeHighlightsSlider";
 import HorizontalScroller from "@/components/HorizontalScroller";
+import ProductCard from "@/components/ProductCard";
 import { formatPrice } from "@/lib/formatPrice";
 import { productHref, slugifyProductName } from "@/lib/productUrl";
 import {
@@ -65,13 +66,15 @@ function buildHighlightedSlides(products: Product[]): OfferHeroSlide[] {
 }
 
 export default async function HomePage() {
-  const [offers, highlightedResponse, brands, tags] = await Promise.all([
+  const [offers, highlightedResponse, newArrivalsResponse, brands, tags] = await Promise.all([
     fetchPublicOffersServer(),
     fetchProductsServer({ page: 1, limit: 10, highlighted: 1 }),
+    fetchProductsServer({ page: 1, limit: 8, newStockArrivals: true }),
     fetchBrandsServer(),
     fetchTagsWithProductsServer(),
   ]);
   const highlighted = highlightedResponse.products || [];
+  const newArrivals = newArrivalsResponse.products || [];
   const offerSlides = await Promise.all(
     offers.slice(0, 5).map(async (offer): Promise<OfferHeroSlide> => {
       const products = await fetchProductsForOffer(offer);
@@ -108,6 +111,20 @@ export default async function HomePage() {
         <section className="home-section">
           <div className="home-section-head"><h2>{'\u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0627\u0644\u0645\u0645\u064a\u0632\u0629'}</h2></div>
           <div className="home-highlighted-hero"><HomeHighlightsSlider slides={highlightedSlides} /></div>
+        </section>
+      ) : null}
+
+      {newArrivals.length > 0 ? (
+        <section className="home-section">
+          <div className="home-section-head">
+            <Link href="/products?newStockArrivals=true">{'\u0639\u0631\u0636 \u0627\u0644\u0643\u0644'}</Link>
+            <h2>{'\u0648\u0635\u0644 \u062d\u062f\u064a\u062b\u0627\u064b'}</h2>
+          </div>
+          <div className="grid-products home-products-grid">
+            {newArrivals.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </section>
       ) : null}
 
