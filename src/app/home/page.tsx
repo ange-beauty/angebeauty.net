@@ -124,11 +124,11 @@ export default async function HomePage() {
             <Link href="/products?newStockArrivals=true">{'\u0639\u0631\u0636 \u0627\u0644\u0643\u0644'}</Link>
             <h2>{'\u0648\u0635\u0644 \u062d\u062f\u064a\u062b\u0627\u064b'}</h2>
           </div>
-          <div className="grid-products home-products-grid">
+          <HorizontalScroller className="home-product-scroller" trackClassName="home-product-strip" label={'وصل حديثاً'}>
             {newArrivals.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} badge={'جديد'} />
             ))}
-          </div>
+          </HorizontalScroller>
         </section>
       ) : null}
 

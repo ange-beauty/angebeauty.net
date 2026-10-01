@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Product } from "@/types/product";
 import { getDisplayBrand } from "@/lib/brand";
-import { formatPrice } from "@/lib/formatPrice";
+import { CURRENCY_LABEL, formatPrice } from "@/lib/formatPrice";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useBasket } from "@/contexts/BasketContext";
 import { useSellingPoint } from "@/contexts/SellingPointContext";
@@ -14,14 +14,17 @@ import { productHref } from "@/lib/productUrl";
 type Props = {
   product: Product;
   hidePrice?: boolean;
+  /** Optional short label shown as a pill on the image (top-left), e.g. "جديد". */
+  badge?: string;
 };
 
-export default function ProductCard({ product, hidePrice = false }: Props) {
+export default function ProductCard({ product, hidePrice = false, badge }: Props) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { addToBasket, getItemQuantity } = useBasket();
   const { selectedSellingPoint } = useSellingPoint();
 
   const qty = getItemQuantity(product.id);
+  const favorite = isFavorite(product.id);
   const available = getAvailableQuantityForSellingPoint(product, selectedSellingPoint?.id);
   const displayBrand = getDisplayBrand(product.brand);
   const href = productHref(product);
@@ -34,7 +37,7 @@ export default function ProductCard({ product, hidePrice = false }: Props) {
 
   return (
     <article className="product-card">
-      <Link href={href}>
+      <Link href={href} className="product-media">
         <img
           src={product.image || "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&h=500&fit=crop"}
           alt={product.name}
@@ -42,12 +45,15 @@ export default function ProductCard({ product, hidePrice = false }: Props) {
           decoding="async"
         />
       </Link>
+      {badge ? <span className="product-card-badge">{badge}</span> : null}
       <button
+        type="button"
         className="product-fav-btn"
-        aria-label="favorite"
+        aria-label={favorite ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
+        aria-pressed={favorite}
         onClick={() => toggleFavorite(product.id)}
       >
-        <HeartIcon color={isFavorite(product.id) ? "#B9442B" : "#7d6a6e"} size={17} />
+        <HeartIcon color={favorite ? "#B9442B" : "#7d6a6e"} size={17} />
       </button>
       <div className="product-body">
         {displayBrand ? <p className="product-brand">{displayBrand}</p> : null}
@@ -59,13 +65,21 @@ export default function ProductCard({ product, hidePrice = false }: Props) {
             <div className="product-price-stack">
               {hasDiscount ? <p className="product-old-price">{formatPrice(product.basePrice!)}</p> : null}
               <p className={`product-price ${hasDiscount ? "discounted" : ""}`}>
-                {canAddToBasket ? formatPrice(product.price) : "\u064a\u062a\u0648\u0641\u0631 \u0642\u0631\u064a\u0628\u0627\u064b"}
+                {canAddToBasket ? (
+                  <>
+                    {formatPrice(product.price)}{" "}
+                    <span className="product-currency">{CURRENCY_LABEL}</span>
+                  </>
+                ) : (
+                  "\u064a\u062a\u0648\u0641\u0631 \u0642\u0631\u064a\u0628\u0627\u064b"
+                )}
               </p>
             </div>
           ) : <span />}
           <button
+            type="button"
             className="product-basket-btn"
-            aria-label="add to basket"
+            aria-label={"إضافة إلى السلة"}
             disabled={!canAddToBasket}
             onClick={() => {
               if (!selectedSellingPoint?.id) {

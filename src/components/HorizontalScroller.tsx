@@ -6,9 +6,10 @@ type Props = {
   children: ReactNode;
   trackClassName: string;
   label: string;
+  className?: string;
 };
 
-export default function HorizontalScroller({ children, trackClassName, label }: Props) {
+export default function HorizontalScroller({ children, trackClassName, label, className }: Props) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
 
@@ -40,7 +41,7 @@ export default function HorizontalScroller({ children, trackClassName, label }: 
   };
 
   return (
-    <div className="home-horizontal-scroller" aria-label={label}>
+    <div className={className ? `home-horizontal-scroller ${className}` : "home-horizontal-scroller"} aria-label={label}>
       {hasOverflow ? (
         <button
           type="button"
