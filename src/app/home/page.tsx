@@ -13,11 +13,14 @@ import {
   type PublicOffer,
 } from "@/lib/serverApi";
 import type { Product } from "@/types/product";
+import JsonLd from "@/components/JsonLd";
+import { buildPageMetadata, organizationJsonLd, webSiteJsonLd } from "@/lib/seo";
 
-export const metadata = {
-  title: "\u0623\u0646\u062c \u0628\u064a\u0648\u062a\u064a | \u062c\u0645\u0627\u0644 \u0645\u0644\u0627\u0626\u0643\u064a",
-  description: "\u0627\u0643\u062a\u0634\u0641 \u0639\u0631\u0648\u0636 \u0648\u0645\u0646\u062a\u062c\u0627\u062a \u0623\u0646\u062c \u0628\u064a\u0648\u062a\u064a \u0627\u0644\u0645\u0645\u064a\u0632\u0629.",
-};
+export const metadata = buildPageMetadata({
+  title: "أنج بيوتي | جمال ملائكي",
+  description: "اكتشف عروض ومنتجات أنج بيوتي المميزة.",
+  path: "/home",
+});
 
 function getOfferName(offer: PublicOffer) {
   return String(offer.name_ar || offer.name_en || "\u0639\u0631\u0636 \u0623\u0646\u062c \u0628\u064a\u0648\u062a\u064a").trim();
@@ -97,6 +100,7 @@ export default async function HomePage() {
 
   return (
     <div className="home-page">
+      <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
       {offerSlides.length > 0 ? (
         <section className="home-hero" aria-label={'\u0639\u0631\u0648\u0636 \u0623\u0646\u062c \u0628\u064a\u0648\u062a\u064a'}>
           <HomeHighlightsSlider slides={offerSlides} />

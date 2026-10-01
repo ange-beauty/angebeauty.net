@@ -11,6 +11,7 @@ import {
   type CompetitionWinner,
 } from "@/lib/serverApi";
 import type { APIProduct } from "@/types/product";
+import { buildPageMetadata } from "@/lib/seo";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -24,10 +25,11 @@ export async function generateMetadata({ params }: PageProps) {
   const snapshot = await fetchCompetitionSnapshotServer(id);
   const title = snapshot ? competitionTitle(snapshot) : "مسابقة أنج بيوتي";
 
-  return {
+  return buildPageMetadata({
     title: `${title} | Ange Beauty`,
     description: "تابعي نتائج المسابقة وترتيب المشاركين مباشرة.",
-  };
+    path: `/competitions/${encodeURIComponent(id)}`,
+  });
 }
 
 export default async function CompetitionPage({ params }: PageProps) {

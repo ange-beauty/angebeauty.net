@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fetchBrandsServer } from "@/lib/serverApi";
 import { slugifyProductName } from "@/lib/productUrl";
+import { buildPageMetadata } from "@/lib/seo";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -21,9 +22,11 @@ function brandIconUrl(brand: Brand) {
   return `https://images.angebeauty.net/${root}/cdn/images/${brand.id}/${brand.icon}?v=${brand.aggregate_version || 1}`;
 }
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: "تسوق حسب الماركة | أنج بيوتي",
-};
+  description: "تصفح جميع الماركات المتوفرة في أنج بيوتي وتسوق منتجات كل ماركة.",
+  path: "/brands",
+});
 
 export default async function BrandsPage() {
   const brands = await fetchBrandsServer();

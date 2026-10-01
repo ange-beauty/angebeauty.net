@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { MailIcon, PhoneIcon, WhatsAppIcon } from "@/components/Icons";
+import { buildPageMetadata } from "@/lib/seo";
 
 const phone = "+9647761791777";
 const phoneLabel = "+964 776 179 1777";
 const email = "support@angebeauty.net";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "تواصل معنا | أنج بيوتي",
   description: "تواصل مع خدمة عملاء أنج بيوتي عبر الهاتف أو واتساب أو البريد الإلكتروني.",
-};
+  path: "/contact",
+});
 
 const contactMethods = [
   {

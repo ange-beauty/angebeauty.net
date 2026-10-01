@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
 const email = "support@angebeauty.net";
 const phone = "+9647761791777";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "شروط الاستخدام | Terms of Use | أنج بيوتي",
   description: "شروط استخدام موقع وتطبيق أنج بيوتي باللغة العربية والإنجليزية.",
-  alternates: {
-    canonical: "https://www.angebeauty.net/terms",
-  },
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

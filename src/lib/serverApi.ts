@@ -160,6 +160,7 @@ async function serverFetch(path: string, init?: RequestInit & { next?: { revalid
 
 export async function fetchProductsServer(
   params: ServerFetchProductsParams = {},
+  options: { revalidate?: number } = {},
 ): Promise<ServerFetchProductsResponse> {
   const { page = 1, limit = 20, keyword, category, brand, tag, barcode, product, highlighted, hasActiveOffer, newStockArrivals, offerIds } = params;
   const queryParams = new URLSearchParams();
@@ -183,7 +184,10 @@ export async function fetchProductsServer(
   if (offerIds) queryParams.append("offer_ids", offerIds);
 
   try {
-    const response = await serverFetch(`/api/v1/products?${queryParams.toString()}`);
+    const response = await serverFetch(
+      `/api/v1/products?${queryParams.toString()}`,
+      typeof options.revalidate === "number" ? { next: { revalidate: options.revalidate } } : undefined,
+    );
     if (!response.ok) return { products: [], hasMore: false, totalRows: 0 };
     const result = await response.json();
     if (!result || result.success !== true || !result.data) {

@@ -14,3 +14,8 @@ export function productHref(product: Pick<Product, "id" | "name">): string {
   const slug = slugifyProductName(product.name || "");
   return `/product/${encodeURIComponent(product.id)}/${encodeURIComponent(slug || "product")}`;
 }
+
+export function brandHref(brand: { id: string; name?: string | null }): string {
+  const slug = slugifyProductName(brand.name || brand.id) || "brand";
+  return `/products/brand/${encodeURIComponent(brand.id)}/${encodeURIComponent(slug)}`;
+}

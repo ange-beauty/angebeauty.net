@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import ProductsCatalog from "@/components/ProductsCatalog";
-import { fetchBrandsServer, fetchCategoriesServer, fetchProductsServer } from "@/lib/serverApi";
+import { fetchBrandsServer, fetchCategoriesServer, fetchProductsServer, fetchTagsWithProductsServer } from "@/lib/serverApi";
+import { buildPageMetadata } from "@/lib/seo";
 import { slugifyProductName } from "@/lib/productUrl";
 
 type ProductsSearchParams = {
@@ -16,10 +18,73 @@ type ProductsSearchParams = {
   offerIds?: string;
 };
 
-export const metadata = {
-  title: "أنج بيوتي | المنتجات",
-  description: "تصفح منتجات أنج بيوتي مع البحث والتصفية حسب العلامة التجارية والفئة.",
-};
+const PRODUCTS_TITLE = "أنج بيوتي | المنتجات";
+const PRODUCTS_DESCRIPTION = "تصفح منتجات أنج بيوتي مع البحث والتصفية حسب العلامة التجارية والفئة.";
+
+function isTruthyParam(value?: string) {
+  return ["1", "true"].includes((value || "").trim().toLowerCase());
+}
+
+/**
+ * Only single-filter listing views (one category, one tag, offers, new arrivals) are self-canonical.
+ * Searches, barcode lookups and multi-filter combinations canonicalize to /products.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<ProductsSearchParams>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const category = (params.category || "").trim();
+  const tag = (params.tag || "").trim();
+  const hasActiveOffer = isTruthyParam(params.hasActiveOffer);
+  const newStockArrivals = isTruthyParam(params.newStockArrivals);
+  const otherFilters = [params.keyword, params.brand, params.barcode, params.product, params.offerIds].some(
+    (value) => (value || "").trim().length > 0,
+  );
+  const activeFilters = [Boolean(category), Boolean(tag), hasActiveOffer, newStockArrivals].filter(Boolean).length;
+
+  if (!otherFilters && activeFilters === 1) {
+    if (category && !category.includes(",")) {
+      const match = (await fetchCategoriesServer()).find((item) => item.id === category);
+      const name = match?.category_name_ar || match?.category_name_en;
+      if (name) {
+        return buildPageMetadata({
+          title: `${name} | أنج بيوتي`,
+          description: `تسوق منتجات ${name} من أنج بيوتي في العراق، مع الأسعار بالدينار العراقي.`,
+          path: `/products?category=${encodeURIComponent(category)}`,
+        });
+      }
+    }
+    if (tag) {
+      const match = (await fetchTagsWithProductsServer()).find((item) => item.id === tag);
+      const name = match?.tag_name_ar || match?.tag_name_en;
+      if (name) {
+        return buildPageMetadata({
+          title: `${name} | أنج بيوتي`,
+          description: `تسوق منتجات ${name} من أنج بيوتي في العراق، مع الأسعار بالدينار العراقي.`,
+          path: `/products?tag=${encodeURIComponent(tag)}`,
+        });
+      }
+    }
+    if (hasActiveOffer) {
+      return buildPageMetadata({
+        title: "العروض والتخفيضات | أنج بيوتي",
+        description: "تسوق منتجات التجميل والعناية المشمولة بالعروض والتخفيضات الحالية في أنج بيوتي.",
+        path: "/products?hasActiveOffer=true",
+      });
+    }
+    if (newStockArrivals) {
+      return buildPageMetadata({
+        title: "وصل حديثاً | أنج بيوتي",
+        description: "منتجات وصلت حديثاً إلى أنج بيوتي.",
+        path: "/products?newStockArrivals=true",
+      });
+    }
+  }
+
+  return buildPageMetadata({ title: PRODUCTS_TITLE, description: PRODUCTS_DESCRIPTION, path: "/products" });
+}
 
 export default async function ProductsPage({
   searchParams,

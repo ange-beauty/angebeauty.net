@@ -1,6 +1,18 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductsCatalog from "@/components/ProductsCatalog";
+import JsonLd from "@/components/JsonLd";
+import { brandHref } from "@/lib/productUrl";
 import { fetchBrandsServer, fetchCategoriesServer, fetchProductsServer } from "@/lib/serverApi";
+import { breadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
+
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
 
 type ProductsFilterParams = {
   filterName?: string;
@@ -23,19 +35,30 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<ProductsFilterParams>;
-}) {
+}): Promise<Metadata> {
   const resolvedParams = await params;
   const filterName = (resolvedParams.filterName || "").trim();
-  const name = decodeURIComponent((resolvedParams.name || "").trim()).replace(/-/g, " ");
+  const id = safeDecode((resolvedParams.id || "").trim());
 
-  if (filterName !== "brand") {
+  if (filterName !== "brand" || !id) {
     return {};
   }
 
-  return {
-    title: name ? `${name} | أنج بيوتي` : "منتجات أنج بيوتي",
-    description: name ? `تصفح منتجات ${name} في أنج بيوتي.` : "تصفح منتجات أنج بيوتي.",
-  };
+  const brand = (await fetchBrandsServer()).find((item) => item.id === id);
+  const name = brand
+    ? brand.brand_name_ar || brand.brand_name_en || brand.id
+    : safeDecode((resolvedParams.name || "").trim()).replace(/-/g, " ");
+  // Canonical always uses the brand's real name slug and drops query filters (search, sort, etc.).
+  const path = brandHref({ id, name: name || id });
+  const englishName = brand?.brand_name_en && brand.brand_name_en !== name ? ` (${brand.brand_name_en})` : "";
+
+  return buildPageMetadata({
+    title: name ? `منتجات ${name}${englishName} | أنج بيوتي` : "منتجات أنج بيوتي",
+    description: name
+      ? `تسوق منتجات ${name}${englishName} من أنج بيوتي في العراق، مع الأسعار بالدينار العراقي.`
+      : "تصفح منتجات أنج بيوتي.",
+    path,
+  });
 }
 
 export default async function ProductsFilterPage({
@@ -80,21 +103,35 @@ export default async function ProductsFilterPage({
     fetchCategoriesServer(),
   ]);
 
+  const brand = brands.find((item) => item.id === id);
+  const brandName = brand ? brand.brand_name_ar || brand.brand_name_en || brand.id : "";
+
   return (
-    <ProductsCatalog
-      initialProducts={productsResponse.products || []}
-      initialHasMore={productsResponse.hasMore}
-      initialKeyword={keyword}
-      initialBrand={id}
-      initialBarcode={barcode}
-      initialProduct={product}
-      initialCategory={category}
-      initialHasActiveOffer={hasActiveOffer}
-      initialNewStockArrivals={newStockArrivals}
-      initialOfferIds={offerIds}
-      initialFocusSearch={focusSearch}
-      brands={brands}
-      categories={categories}
-    />
+    <>
+      {brand ? (
+        <JsonLd
+          data={breadcrumbJsonLd([
+            { name: "الرئيسية", path: "/home" },
+            { name: "الماركات", path: "/brands" },
+            { name: brandName, path: brandHref({ id: brand.id, name: brandName }) },
+          ])}
+        />
+      ) : null}
+      <ProductsCatalog
+        initialProducts={productsResponse.products || []}
+        initialHasMore={productsResponse.hasMore}
+        initialKeyword={keyword}
+        initialBrand={id}
+        initialBarcode={barcode}
+        initialProduct={product}
+        initialCategory={category}
+        initialHasActiveOffer={hasActiveOffer}
+        initialNewStockArrivals={newStockArrivals}
+        initialOfferIds={offerIds}
+        initialFocusSearch={focusSearch}
+        brands={brands}
+        categories={categories}
+      />
+    </>
   );
 }
