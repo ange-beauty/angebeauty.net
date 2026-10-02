@@ -28,7 +28,8 @@ export default function ProductDetailsView({ product, variationGroup }: Props) {
     typeof product.basePrice === "number" &&
     product.basePrice > product.price &&
     (product.discountAmount ?? product.basePrice - product.price) > 0;
-  const priceLabel = canAddToBasket ? formatPrice(product.price) : "\u064a\u062a\u0648\u0641\u0631 \u0642\u0631\u064a\u0628\u0627\u064b";
+  // Coming-soon products (no price) hide the price block entirely; the add button still shows the coming-soon state.
+  const priceLabel = canAddToBasket ? formatPrice(product.price) : null;
   const displayImage =
     product.image || "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1200&h=1200&fit=crop";
   const popupImage = product.fullImage || displayImage;
@@ -76,19 +77,25 @@ export default function ProductDetailsView({ product, variationGroup }: Props) {
           </div>
           <h1 className="product-detail-title">{product.name}</h1>
           {variationGroup && <ProductVariationSelector group={variationGroup} productId={product.id} />}
-          <div className="product-price-box">
-            <p className="product-price-label">{'\u0627\u0644\u0633\u0639\u0631'}</p>
-            {hasDiscount ? <p className="product-detail-old-price">{formatPrice(product.basePrice!)}</p> : null}
-            <p className={`product-price-value ${hasDiscount ? "discounted" : ""}`}>{priceLabel}</p>
-          </div>
+          {priceLabel ? (
+            <div className="product-price-box">
+              <p className="product-price-label">{'\u0627\u0644\u0633\u0639\u0631'}</p>
+              {hasDiscount ? <p className="product-detail-old-price">{formatPrice(product.basePrice!)}</p> : null}
+              <p className={`product-price-value ${hasDiscount ? "discounted" : ""}`}>{priceLabel}</p>
+            </div>
+          ) : null}
         </article>
       </section>
 
       <section className="product-sticky-bar">
         <div>
-          <p className="product-sticky-price-label">{'\u0627\u0644\u0633\u0639\u0631'}</p>
-          {hasDiscount ? <p className="product-sticky-old-price">{formatPrice(product.basePrice!)}</p> : null}
-          <p className={`product-sticky-price-value ${hasDiscount ? "discounted" : ""}`}>{priceLabel}</p>
+          {priceLabel ? (
+            <>
+              <p className="product-sticky-price-label">{'\u0627\u0644\u0633\u0639\u0631'}</p>
+              {hasDiscount ? <p className="product-sticky-old-price">{formatPrice(product.basePrice!)}</p> : null}
+              <p className={`product-sticky-price-value ${hasDiscount ? "discounted" : ""}`}>{priceLabel}</p>
+            </>
+          ) : null}
         </div>
         <button
           type="button"
