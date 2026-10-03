@@ -33,6 +33,7 @@ const tabs = [
 tabs.splice(2, 0, offerTab);
 
 const standalonePaths = ["/turnstile-widget"];
+const noTabNavPaths = ["/categories"];
 const noHeaderPaths = ["/basket", "/brands", "/categories", "/products", "/product", "/account", "/account-register"];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -53,6 +54,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const showHeader = !noHeaderPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+
+  const showTabNav = !noTabNavPaths.includes(pathname);
 
   return (
     <div className="app-shell">
@@ -75,6 +78,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       ) : null}
       <main className="app-main">{children}</main>
+      {showTabNav ? (
       <nav className="tab-nav">
         {tabs.map((tab) => {
           const isActive =
@@ -91,6 +95,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
+      ) : null}
     </div>
   );
 }
