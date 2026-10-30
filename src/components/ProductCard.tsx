@@ -26,6 +26,8 @@ export default function ProductCard({ product, hidePrice = false, badge }: Props
   const qty = getItemQuantity(product.id);
   const favorite = isFavorite(product.id);
   const available = getAvailableQuantityForSellingPoint(product, selectedSellingPoint?.id);
+  const stock = available ?? product.totalAvailable;
+  const outOfStock = typeof stock === "number" && stock <= 0;
   const displayBrand = getDisplayBrand(product.brand);
   const href = productHref(product);
   const canAddToBasket = Number.isFinite(product.price) && product.price > 0;
@@ -37,13 +39,14 @@ export default function ProductCard({ product, hidePrice = false, badge }: Props
 
   return (
     <article className="product-card">
-      <Link href={href} className="product-media">
+      <Link href={href} className={`product-media ${outOfStock ? "out-of-stock" : ""}`}>
         <img
           src={product.image || "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&h=500&fit=crop"}
           alt={product.name}
           loading="lazy"
           decoding="async"
         />
+        {outOfStock ? <span className="product-out-of-stock">غير متوفر</span> : null}
       </Link>
       {badge ? <span className="product-card-badge">{badge}</span> : null}
       <button

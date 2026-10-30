@@ -2608,6 +2608,23 @@ body {
   mix-blend-mode: multiply;
 }
 
+/* Out of stock: darkened image with an Arabic "not available" label. */
+.product-media.out-of-stock img {
+  filter: brightness(0.45);
+}
+
+.product-out-of-stock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
 .product-card a:focus-visible,
 .product-card button:focus-visible {
   outline: 3px solid rgba(126, 74, 83, 0.3);
