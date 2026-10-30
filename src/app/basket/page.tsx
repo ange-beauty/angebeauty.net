@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQueries } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { CloseIcon, MinusIcon, PlusIcon, TrashIcon } from "@/components/Icons";
 import { useBasket } from "@/contexts/BasketContext";
 import { useSellingPoint } from "@/contexts/SellingPointContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { fetchProductById } from "@/lib/api";
+import { fetchBasketPrices, fetchProductById } from "@/lib/api";
 import { withClientSourceHeader } from "@/lib/requestHeaders";
 import { formatPrice } from "@/lib/formatPrice";
 import { getAvailableQuantityForSellingPoint } from "@/lib/availability";
@@ -66,11 +66,24 @@ export default function BasketPage() {
     })),
   });
 
+  // Server price rule (same as the dashboard and order submission); falls back to the fetched product price if it fails.
+  const { data: quote } = useQuery({
+    queryKey: ["basket-price", selectedSellingPoint?.id, basket.map((item) => `${item.productId}:${item.quantity}`).join(",")],
+    queryFn: () => fetchBasketPrices(selectedSellingPoint?.id, basket),
+    enabled: basket.length > 0,
+    retry: false,
+  });
+
   const products = basket
     .map((item, idx) => {
       const product = productQueries[idx]?.data;
       if (!product) return null;
-      return { ...product, quantity: item.quantity };
+      const priced = quote?.get(product.id);
+      return {
+        ...product,
+        ...(priced ? { price: priced.finalPrice, basePrice: priced.basePrice } : {}),
+        quantity: item.quantity,
+      };
     })
     .filter((item): item is NonNullable<typeof item> => !!item);
   const zeroPriceProductId = products.find(

@@ -83,7 +83,7 @@ export default function ProductCard({ product, hidePrice = false, badge }: Props
             type="button"
             className="product-basket-btn"
             aria-label={"إضافة إلى السلة"}
-            disabled={!canAddToBasket}
+            disabled={!canAddToBasket || outOfStock}
             onClick={() => {
               if (!selectedSellingPoint?.id) {
                 window.alert("يرجى اختيار نقطة البيع أولاً من صفحة المتجر.");
