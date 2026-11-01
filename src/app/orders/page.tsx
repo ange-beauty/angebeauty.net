@@ -85,11 +85,12 @@ function OrderDetailsDialog({ order, onClose }: { order: ClientOrder | null; onC
               const image = item.image || product?.image || "";
 
               return (
-                <div className="client-order-detail-item" key={`${item.productId}-${index}`}>
+                <div className={`client-order-detail-item${item.added ? " client-order-added-item" : ""}`} key={`${item.productId}-${index}`}>
                   <div className="client-order-detail-media">
                     {image ? <img src={image} alt={displayName} loading="lazy" decoding="async" /> : <span />}
                   </div>
                   <div className="client-order-detail-copy">
+                    {item.added ? <span className="client-order-added-badge">{"مضاف"}</span> : null}
                     <p>{displayName}</p>
                     <dl className="client-order-detail-metrics">
                       <div>
@@ -110,6 +111,25 @@ function OrderDetailsDialog({ order, onClose }: { order: ClientOrder | null; onC
               );
             })}
           </div>
+
+          {order.removedItems.length > 0 ? (
+            <>
+              <h3>{"المنتجات المحذوفة"}</h3>
+              <div className="client-order-detail-items">
+                {order.removedItems.map((item, index) => (
+                  <div className="client-order-detail-item client-order-removed-item" key={`removed-${item.productId}-${index}`}>
+                    <div className="client-order-detail-media">
+                      {item.image ? <img src={item.image} alt={item.productName} loading="lazy" decoding="async" /> : <span />}
+                    </div>
+                    <div className="client-order-detail-copy">
+                      <p>{item.productName || "منتج"}</p>
+                      <p>{item.quantity} &times; {formatPrice(item.price)} {"د.ع"}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
 
           <div className="client-order-dialog-total">
             <strong>{formatPrice(order.totalPrice)} {"\u062f.\u0639"}</strong>

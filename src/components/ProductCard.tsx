@@ -46,7 +46,7 @@ export default function ProductCard({ product, hidePrice = false, badge }: Props
           loading="lazy"
           decoding="async"
         />
-        {outOfStock ? <span className="product-out-of-stock">غير متوفر</span> : null}
+        {outOfStock ? <span className="product-out-of-stock">نفدت الكمية</span> : null}
       </Link>
       {badge ? <span className="product-card-badge">{badge}</span> : null}
       <button
