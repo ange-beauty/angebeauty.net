@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import AppProviders from "@/components/AppProviders";
 import AppShell from "@/components/AppShell";
+import MetaPixel from "@/components/MetaPixel";
 import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body>
+        <MetaPixel />
         <AppProviders>
           <AppShell>{children}</AppShell>
         </AppProviders>

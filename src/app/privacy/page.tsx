@@ -161,8 +161,16 @@ export default function PrivacyPage() {
             <li>A push notification token and an app-generated device identifier when you allow notifications.</li>
             <li>Notification receipt and open events, used to measure delivery and improve communications.</li>
             <li>Cookies and local storage required for authentication, the basket, and favorites.</li>
+            <li>
+              On angebeauty.net only: the Meta (Facebook) Pixel, which sends Meta information about your visit, such as the
+              pages you view and your browser and device, and may set cookies. We use it to measure visits and the results of
+              our advertising on Meta.
+            </li>
           </ul>
-          <p>We do not currently use third-party advertising networks, and we do not sell personal data.</p>
+          <p>
+            Apart from the Meta Pixel on angebeauty.net, we do not currently use third-party advertising networks, and we do
+            not sell personal data.
+          </p>
         </section>
 
         <section>
