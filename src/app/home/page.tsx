@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import HomeHighlightsSlider, { type OfferHeroSlide } from "@/components/HomeHighlightsSlider";
+import HomeAllProducts from "@/components/HomeAllProducts";
 import HorizontalScroller from "@/components/HorizontalScroller";
 import ProductCard from "@/components/ProductCard";
 import { formatPrice } from "@/lib/formatPrice";
@@ -41,9 +42,10 @@ function getOfferValueLabel(offer: PublicOffer) {
   return "\u0639\u0631\u0636 \u062e\u0627\u0635";
 }
 
+// Only offers with uploaded artwork have a hero image; the others show their text beside the product instead.
 function buildOfferHeroImageUrl(offer: PublicOffer) {
-  const fileName = offer.hero_image || `${offer.id}.webp`;
-  return `https://images.angebeauty.net/angeapi/cdn/images/${offer.id}/${fileName}`;
+  if (!offer.hero_image) return undefined;
+  return `https://images.angebeauty.net/angeapi/cdn/images/${offer.id}/${offer.hero_image}`;
 }
 
 async function fetchProductsForOffer(offer: PublicOffer): Promise<Product[]> {
@@ -89,7 +91,7 @@ export default async function HomePage() {
         valueLabel: getOfferValueLabel(offer),
         href: `/products?offerIds=${encodeURIComponent(offer.id)}`,
         heroImage: buildOfferHeroImageUrl(offer),
-        fallbackImage: products[0]?.image,
+        fallbackImage: products[0]?.fullImage || products[0]?.image,
         hideText: true,
         showTextOnFallback: true,
         products,
@@ -169,6 +171,8 @@ export default async function HomePage() {
           </HorizontalScroller>
         </section>
       ) : null}
+
+      <HomeAllProducts />
     </div>
   );
 }

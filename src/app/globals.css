@@ -2659,21 +2659,23 @@ body {
   mix-blend-mode: multiply;
 }
 
-/* Out of stock: darkened image with an Arabic "not available" label. */
+/* Out of stock: faded (not darkened) image with an Arabic "not available" label. */
 .product-media.out-of-stock img {
-  filter: brightness(0.45);
+  filter: grayscale(0.5) opacity(0.6);
 }
 
 .product-out-of-stock {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.25);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   font-size: 15px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .product-card a:focus-visible,
@@ -5541,4 +5543,154 @@ button.cs-row-text {
 .cs-root button:focus-visible {
   outline: 3px solid #e58aa9;
   outline-offset: 2px;
+}
+
+/* Products filter modal: Brands / Categories / General tabs */
+.products-filter-tabs {
+  display: flex;
+  border-bottom: 1px solid #eadde0;
+}
+
+.products-filter-tab {
+  flex: 1;
+  padding: 12px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #8f7b7f;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.products-filter-tab.active {
+  color: #7e4a53;
+  border-bottom-color: #7e4a53;
+}
+
+.products-modal-body-flush {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The categories screen is a fixed full page on /categories; inside the filter it fills the modal body. */
+.cs-root.cs-embedded {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  max-width: none;
+  /* modal header + tab bar take ~140px; the categories list scrolls inside */
+  height: calc(100dvh - 140px);
+}
+
+/* The brands rail is fixed on /brands; inside the filter it is a wrapping row above the list. */
+.brand-alpha-rail.embedded {
+  position: static;
+  width: auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 6px;
+}
+
+button.brand-card {
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.brand-card.selected .brand-logo-text {
+  box-shadow: 0 0 0 3px #7e4a53;
+}
+
+/* Grouped brand/category chips: the label opens the filter tab, the x clears the group. */
+.products-chip-open,
+.products-chip-clear {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.products-chip-clear {
+  font-weight: 700;
+  margin-inline-start: 7px;
+}
+
+.products-page {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Hero slides without artwork: offer text on one side, the product on the other (no text over the picture). */
+.offer-hero-link:not(.offer-hero-image-only) {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 42%);
+  align-items: center;
+  direction: rtl;
+  gap: 16px;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #fff7fa, #f8e4ea);
+}
+
+.offer-hero-link:not(.offer-hero-image-only)::after {
+  display: none;
+}
+
+.offer-hero-link:not(.offer-hero-image-only) .offer-hero-copy {
+  grid-column: 1;
+  grid-row: 1;
+  position: static;
+  inset: auto;
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+.offer-hero-link:not(.offer-hero-image-only) .offer-hero-media {
+  grid-column: 2;
+  grid-row: 1;
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.offer-hero-link:not(.offer-hero-image-only) .offer-hero-image {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Products can have several categories and tags: chips wrap instead of squeezing. */
+.product-info-top {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+a.product-chip {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Product page: the picture was a full-width square (832px on a tablet); keep it a comfortable size. */
+.product-detail-image-trigger {
+  width: min(100%, 420px, 60vh);
+}
+
+/* Tablet and up: picture and details side by side (the old two-column layout only started at 901px). */
+@media (min-width: 700px) {
+  .product-detail-layout {
+    grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
 }

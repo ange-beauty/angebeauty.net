@@ -95,7 +95,7 @@ export default function HomeHighlightsSlider({ slides }: Props) {
           const isUsingFallback = fallbackSlides.has(slide.id);
           const fallbackImage = slide.fallbackImage || slide.products[0]?.image;
           const heroImage = isUsingFallback ? fallbackImage : slide.heroImage || fallbackImage;
-          const hideText = slide.hideText && !(isUsingFallback && slide.showTextOnFallback);
+          const hideText = slide.hideText && !((isUsingFallback || !slide.heroImage) && slide.showTextOnFallback);
 
           return (
             <article key={slide.id} className="offer-hero-slide">

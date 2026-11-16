@@ -1,11 +1,13 @@
-﻿export type ProductCategory = "skincare" | "makeup" | "fragrance" | "haircare" | "bodycare";
-
+﻿
 export interface Product {
   id: string;
   name: string;
   brand: string;
   brandId?: string;
-  category: ProductCategory;
+  /** Display name of the product's category ("" when it has none). */
+  category: string;
+  /** Every category the product belongs to (the detail page shows them all). */
+  categories?: { id: string; name: string }[];
   price: number;
   basePrice?: number;
   discountAmount?: number;
@@ -54,13 +56,14 @@ export interface APIProduct {
   images?: string | string[] | null;
   images_version?: number | string | null;
   category?: string | null | { id: number; name?: string; name_ar?: string; name_en?: string };
+  categories?: { id?: string | null; category_name_ar?: string | null; category_name_en?: string | null }[] | null;
   brand?: string | null;
   brand_id?: string | number | null;
   brand_name_ar?: string | null;
   brand_name_en?: string | null;
   aggregate_version?: number | string | null;
   last_updated_at?: string | null;
-  tags?: string[];
+  tags?: (string | { id?: string | null; tag_name_ar?: string | null; tag_name_en?: string | null })[];
   total_available?: number | null;
   availability_by_selling_point?: {
     selling_point?: string | null;
@@ -126,15 +129,31 @@ function buildProductImageUrl(apiProduct: APIProduct, fileName: string): string 
   return `${baseUrl}?v=${encodeURIComponent(String(stableVersion))}`;
 }
 
-export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
-  const categoryMap: Record<string, ProductCategory> = {
-    skincare: "skincare",
-    makeup: "makeup",
-    fragrance: "fragrance",
-    haircare: "haircare",
-    bodycare: "bodycare",
-  };
+function getCategories(apiProduct: APIProduct): { id: string; name: string }[] {
+  const list = Array.isArray(apiProduct.categories) ? apiProduct.categories : [];
+  return list
+    .map((item) => ({ id: item?.id || "", name: repairArabicMojibake(item?.category_name_ar || item?.category_name_en || "").trim() }))
+    .filter((item) => item.id && item.name);
+}
 
+function getCategoryName(apiProduct: APIProduct): string {
+  const list = Array.isArray(apiProduct.categories) ? apiProduct.categories : [];
+  const primary = list.find((item) => item?.id === apiProduct.category) || list[0];
+  if (primary) return repairArabicMojibake(primary.category_name_ar || primary.category_name_en || "").trim();
+  if (typeof apiProduct.category === "object" && apiProduct.category) {
+    return repairArabicMojibake(apiProduct.category.name_ar || apiProduct.category.name || apiProduct.category.name_en || "").trim();
+  }
+  return "";
+}
+
+function mapProductTags(tags: APIProduct["tags"]): string[] {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .map((tag) => (typeof tag === "string" ? tag : tag?.tag_name_ar || tag?.tag_name_en || "").trim())
+    .filter(Boolean);
+}
+
+export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
   const productName =
     repairArabicMojibake(apiProduct.name_ar) ||
     repairArabicMojibake(apiProduct.name_en) ||
@@ -146,16 +165,7 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
     repairArabicMojibake(apiProduct.description) ||
     "";
 
-  let category: ProductCategory = "skincare";
-  if (typeof apiProduct.category === "object" && apiProduct.category) {
-    const categoryName = (
-      repairArabicMojibake(apiProduct.category.name_ar) ||
-      repairArabicMojibake(apiProduct.category.name) ||
-      repairArabicMojibake(apiProduct.category.name_en) ||
-      "skincare"
-    ).toLowerCase();
-    category = categoryMap[categoryName] || "skincare";
-  }
+  const category = getCategoryName(apiProduct);
 
   const brandName =
     repairArabicMojibake(apiProduct.brand_name_ar) ||
@@ -219,6 +229,7 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
     brand: brandName,
     brandId,
     category,
+    categories: getCategories(apiProduct),
     price: finalPrice,
     basePrice,
     discountAmount,
@@ -226,7 +237,7 @@ export function mapAPIProductToProduct(apiProduct: APIProduct): Product {
     image: imageUrl,
     fullImage: fullImageUrl || imageUrl,
     description: productDescription,
-    ingredients: apiProduct.tags || [],
+    ingredients: mapProductTags(apiProduct.tags),
     rating: 4.5,
     reviewCount: 0,
     totalAvailable: typeof apiProduct.total_available === "number" ? apiProduct.total_available : undefined,

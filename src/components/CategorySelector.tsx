@@ -119,7 +119,18 @@ function buildModel(categories: PublicCategory[]) {
   return { byId, mains, allNodes };
 }
 
-export default function CategorySelector({ categories }: { categories: PublicCategory[] }) {
+// embedded: shown inside the products filter; onApply gets the chosen ids instead of navigating, onClose replaces back.
+export default function CategorySelector({
+  categories,
+  embedded = false,
+  onApply,
+  onClose,
+}: {
+  categories: PublicCategory[];
+  embedded?: boolean;
+  onApply?: (ids: string[]) => void;
+  onClose?: () => void;
+}) {
   const router = useRouter();
   const model = useMemo(() => buildModel(categories), [categories]);
   const { mains, allNodes } = model;
@@ -194,6 +205,10 @@ export default function CategorySelector({ categories }: { categories: PublicCat
     allNodes.forEach((node) => {
       if (node.children.length && node.leafIds.length && node.leafIds.every((id) => selected.has(id))) ids.add(node.id);
     });
+    if (onApply) {
+      onApply(Array.from(ids));
+      return;
+    }
     const params = new URLSearchParams();
     if (ids.size) params.set("category", Array.from(ids).join(","));
     router.push(params.size ? `/products?${params.toString()}` : "/products");
@@ -272,9 +287,10 @@ export default function CategorySelector({ categories }: { categories: PublicCat
   const isSearching = Boolean(normalizedQuery);
 
   return (
-    <div className="cs-root" dir="rtl">
+    <div className={`cs-root ${embedded ? "cs-embedded" : ""}`} dir="rtl">
+      {!embedded ? (
       <header className="cs-header">
-        <button type="button" className="cs-close" onClick={() => router.back()} aria-label="إغلاق">
+        <button type="button" className="cs-close" onClick={() => (onClose ? onClose() : router.back())} aria-label="إغلاق">
           <CloseIcon size={22} />
         </button>
         <h1 className="cs-title">التصنيفات</h1>
@@ -282,6 +298,7 @@ export default function CategorySelector({ categories }: { categories: PublicCat
           مسح الكل
         </button>
       </header>
+      ) : null}
 
       <div className="cs-search">
         <SearchIcon size={18} />

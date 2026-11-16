@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
+import BrandsBrowser from "@/components/BrandsBrowser";
+import CategorySelector from "@/components/CategorySelector";
 import { CloseIcon, FilterIcon, SearchIcon } from "@/components/Icons";
 import { fetchProducts, type Brand, type Category } from "@/lib/api";
 import { slugifyProductName } from "@/lib/productUrl";
@@ -25,12 +27,9 @@ type Props = {
   categories: Category[];
 };
 
-const BRAND_ALL_FILTER = "ALL";
-const BRAND_LETTERS = [
-  BRAND_ALL_FILTER,
-  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-];
+function splitIds(value: string): string[] {
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
 
 function getBrandLabel(brand: Brand): string {
   return brand.brand_name_ar || brand.brand_name_en || brand.id;
@@ -38,14 +37,6 @@ function getBrandLabel(brand: Brand): string {
 
 function getCategoryLabel(category: Category): string {
   return category.category_name_ar || category.category_name_en || category.id;
-}
-
-function startsWithLetter(brand: Brand, letter: string): boolean {
-  if (letter === BRAND_ALL_FILTER) return true;
-  const labels = [brand.brand_name_en, brand.brand_name_ar, brand.id]
-    .map((value) => String(value || "").trim())
-    .filter(Boolean);
-  return labels.some((label) => (label[0]?.toUpperCase() || "") === letter);
 }
 
 function brandFilterPath(brand: Brand): string {
@@ -81,14 +72,14 @@ export default function ProductsCatalog({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [keywordInput, setKeywordInput] = useState(initialKeyword);
   const [draftKeyword, setDraftKeyword] = useState(initialKeyword);
-  const [draftBrand, setDraftBrand] = useState(initialBrand);
+  const [draftBrands, setDraftBrands] = useState<string[]>(splitIds(initialBrand));
+  const [filterTab, setFilterTab] = useState<"brands" | "categories" | "general">("brands");
   const [draftBarcode, setDraftBarcode] = useState(initialBarcode);
   const [draftCategories, setDraftCategories] = useState<string[]>(
     initialCategory.split(",").map((item) => item.trim()).filter(Boolean),
   );
   const [draftHasActiveOffer, setDraftHasActiveOffer] = useState(initialHasActiveOffer);
   const [draftNewStockArrivals, setDraftNewStockArrivals] = useState(initialNewStockArrivals);
-  const [activeBrandLetter, setActiveBrandLetter] = useState(BRAND_ALL_FILTER);
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -98,7 +89,7 @@ export default function ProductsCatalog({
     setLoadError("");
     setKeywordInput(initialKeyword);
     setDraftKeyword(initialKeyword);
-    setDraftBrand(initialBrand);
+    setDraftBrands(splitIds(initialBrand));
     setDraftBarcode(initialBarcode);
     setDraftCategories(initialCategory.split(",").map((item) => item.trim()).filter(Boolean));
     setDraftHasActiveOffer(initialHasActiveOffer);
@@ -110,31 +101,6 @@ export default function ProductsCatalog({
       inputRef.current?.focus();
     }
   }, [initialFocusSearch]);
-
-  const filteredBrands = useMemo(
-    () => brands.filter((brand) => startsWithLetter(brand, activeBrandLetter)),
-    [activeBrandLetter, brands],
-  );
-
-  const rootCategories = useMemo(
-    () => {
-      const ids = new Set(categories.map((category) => category.id));
-      return categories.filter((category) => !category.parent_category || !ids.has(category.parent_category));
-    },
-    [categories],
-  );
-
-  const childrenByParent = useMemo(() => {
-    const map = new Map<string, Category[]>();
-    const ids = new Set(categories.map((category) => category.id));
-    categories.forEach((category) => {
-      if (!category.parent_category || !ids.has(category.parent_category)) return;
-      const current = map.get(category.parent_category) || [];
-      current.push(category);
-      map.set(category.parent_category, current);
-    });
-    return map;
-  }, [categories]);
 
   useEffect(() => {
     if (!hasMore || isLoadingMore) return;
@@ -222,7 +188,10 @@ export default function ProductsCatalog({
     if (next.newStockArrivals) query.set("newStockArrivals", "true");
     if (next.offerIds?.trim()) query.set("offerIds", next.offerIds.trim());
 
-    const selectedBrand = brands.find((brand) => brand.id === next.brand?.trim());
+    // One brand keeps its pretty /products/brand/... path; several go in the ?brand= list the API already accepts.
+    const brandIds = splitIds(next.brand || "");
+    const selectedBrand = brandIds.length === 1 ? brands.find((brand) => brand.id === brandIds[0]) : undefined;
+    if (brandIds.length > 1) query.set("brand", brandIds.join(","));
     const basePath = selectedBrand ? brandFilterPath(selectedBrand) : "/products";
     router.push(query.toString() ? `${basePath}?${query.toString()}` : basePath);
   }
@@ -232,7 +201,7 @@ export default function ProductsCatalog({
     pushProductsRoute({
       keyword: draftKeyword,
       barcode: draftBarcode,
-      brand: draftBrand,
+      brand: draftBrands.join(","),
       product: initialProduct,
       category: draftCategories.join(","),
       tag: initialTag,
@@ -244,7 +213,7 @@ export default function ProductsCatalog({
 
   function resetFilters() {
     setDraftKeyword("");
-    setDraftBrand("");
+    setDraftBrands([]);
     setDraftBarcode("");
     setDraftCategories([]);
     setDraftHasActiveOffer(false);
@@ -270,21 +239,28 @@ export default function ProductsCatalog({
     });
   }
 
+  function toggleBrand(id: string) {
+    setDraftBrands((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
   function toggleCategory(id: string) {
     setDraftCategories((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
-  const selectedBrand = brands.find((brand) => brand.id === initialBrand);
+  const selectedBrandIds = splitIds(initialBrand);
+  const selectedBrands = selectedBrandIds
+    .map((id) => brands.find((brand) => brand.id === id))
+    .filter((brand): brand is Brand => Boolean(brand));
   const selectedCategoryIds = initialCategory.split(",").map((item) => item.trim()).filter(Boolean);
   const selectedCategories = selectedCategoryIds
     .map((id) => categories.find((category) => category.id === id))
     .filter((category): category is Category => Boolean(category));
   const hasActiveFilters = Boolean(initialKeyword || initialBrand || initialBarcode || initialProduct || initialCategory || initialTag || initialHasActiveOffer || initialNewStockArrivals);
 
-  function removeFilter(filter: "keyword" | "brand" | "barcode" | "product" | "category" | "tag" | "offer" | "newStock", categoryId?: string) {
+  function removeFilter(filter: "keyword" | "brand" | "barcode" | "product" | "category" | "tag" | "offer" | "newStock", itemId?: string) {
     const nextCategory =
-      filter === "category" && categoryId
-        ? selectedCategoryIds.filter((id) => id !== categoryId).join(",")
+      filter === "category" && itemId
+        ? selectedCategoryIds.filter((id) => id !== itemId).join(",")
         : filter === "category"
           ? ""
           : initialCategory;
@@ -297,7 +273,7 @@ export default function ProductsCatalog({
     pushProductsRoute({
       keyword: filter === "keyword" ? "" : initialKeyword,
       barcode: filter === "barcode" ? "" : initialBarcode,
-      brand: filter === "brand" ? "" : initialBrand,
+      brand: filter === "brand" ? (itemId ? selectedBrandIds.filter((id) => id !== itemId).join(",") : "") : initialBrand,
       product: filter === "product" ? "" : initialProduct,
       category: nextCategory,
       tag: filter === "tag" ? "" : initialTag,
@@ -305,36 +281,6 @@ export default function ProductsCatalog({
       newStockArrivals: filter === "newStock" ? false : initialNewStockArrivals,
       offerIds: filter === "offer" ? "" : initialOfferIds,
     });
-  }
-
-  function renderCategoryFilterNode(category: Category, depth = 0): React.ReactNode {
-    const children = childrenByParent.get(category.id) || [];
-    const isSelected = draftCategories.includes(category.id);
-
-    return (
-      <details key={category.id} className="products-category-node" open={depth === 0}>
-        <summary>
-          <span style={{ paddingInlineEnd: depth > 0 ? Math.min(depth * 12, 36) : undefined }}>
-            {getCategoryLabel(category)}
-          </span>
-          <button
-            type="button"
-            className={`products-category-check ${isSelected ? "active" : ""}`}
-            onClick={(event) => {
-              event.preventDefault();
-              toggleCategory(category.id);
-            }}
-          >
-            {isSelected ? "\u2713" : "+"}
-          </button>
-        </summary>
-        {children.length ? (
-          <div className="products-category-children">
-            {children.map((child) => renderCategoryFilterNode(child, depth + 1))}
-          </div>
-        ) : null}
-      </details>
-    );
   }
 
   return (
@@ -371,11 +317,14 @@ export default function ProductsCatalog({
                 <strong aria-hidden="true">×</strong>
               </button>
             ) : null}
-            {selectedBrand ? (
-              <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("brand")}>
-                <span>{getBrandLabel(selectedBrand)}</span>
-                <strong aria-hidden="true">×</strong>
-              </button>
+            {/* Several brands or categories collapse into one chip each, so the bar stays one line; the label opens that tab. */}
+            {selectedBrands.length ? (
+              <span className="products-chip products-filter-chip">
+                <button type="button" className="products-chip-open" onClick={() => { setFilterTab("brands"); setIsFilterOpen(true); }}>
+                  {selectedBrands.length === 1 ? getBrandLabel(selectedBrands[0]) : `${selectedBrands.length} علامات تجارية`}
+                </button>
+                <button type="button" className="products-chip-clear" aria-label="مسح العلامات التجارية" onClick={() => removeFilter("brand")}>×</button>
+              </span>
             ) : null}
             {initialProduct ? (
               <button type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("product")}>
@@ -401,12 +350,14 @@ export default function ProductsCatalog({
                 <strong aria-hidden="true">{"\u00d7"}</strong>
               </button>
             ) : null}
-            {selectedCategories.map((category) => (
-              <button key={category.id} type="button" className="products-chip products-filter-chip" onClick={() => removeFilter("category", category.id)}>
-                <span>{getCategoryLabel(category)}</span>
-                <strong aria-hidden="true">×</strong>
-              </button>
-            ))}
+            {selectedCategories.length ? (
+              <span className="products-chip products-filter-chip">
+                <button type="button" className="products-chip-open" onClick={() => { setFilterTab("categories"); setIsFilterOpen(true); }}>
+                  {selectedCategories.length === 1 ? getCategoryLabel(selectedCategories[0]) : `${selectedCategories.length} فئات`}
+                </button>
+                <button type="button" className="products-chip-clear" aria-label="مسح الفئات" onClick={() => removeFilter("category")}>×</button>
+              </span>
+            ) : null}
           </div>
         ) : null}
       </section>
@@ -438,7 +389,55 @@ export default function ProductsCatalog({
               </button>
             </div>
 
-            <div className="products-modal-body">
+            <div className="products-filter-tabs" role="tablist">
+              {([
+                ["brands", "العلامات التجارية"],
+                ["categories", "الفئات"],
+                ["general", "عام"],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={filterTab === key}
+                  className={`products-filter-tab ${filterTab === key ? "active" : ""}`}
+                  onClick={() => setFilterTab(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {filterTab === "brands" ? (
+              <div className="products-modal-body">
+                <BrandsBrowser embedded brands={brands} selectedIds={draftBrands} onToggle={toggleBrand} />
+              </div>
+            ) : null}
+            {filterTab === "categories" ? (
+              <div className="products-modal-body products-modal-body-flush">
+                <CategorySelector
+                  embedded
+                  categories={categories}
+                  onClose={() => setIsFilterOpen(false)}
+                  onApply={(ids) => {
+                    setIsFilterOpen(false);
+                    pushProductsRoute({
+                      keyword: draftKeyword,
+                      barcode: draftBarcode,
+                      brand: draftBrands.join(","),
+                      product: initialProduct,
+                      category: ids.join(","),
+                      tag: initialTag,
+                      hasActiveOffer: draftHasActiveOffer,
+                      newStockArrivals: draftNewStockArrivals,
+                      offerIds: draftHasActiveOffer ? initialOfferIds : "",
+                    });
+                  }}
+                />
+              </div>
+            ) : null}
+            {filterTab === "general" ? (
+              <div className="products-modal-body">
               <section className="products-filter-section">
                 <div className="products-section-head">
                   <h3>{"\u0627\u0644\u0645\u062e\u0632\u0648\u0646"}</h3>
@@ -478,87 +477,19 @@ export default function ProductsCatalog({
                 />
               </section>
 
-              <section className="products-filter-section">
-                <div className="products-section-head">
-                  <h3>العلامة التجارية</h3>
-                </div>
+              </div>
+            ) : null}
 
-                <div className="products-letters-row">
-                  {BRAND_LETTERS.map((letter) => (
-                    <button
-                      key={letter}
-                      type="button"
-                      className={`products-letter ${activeBrandLetter === letter ? "active" : ""}`}
-                      onClick={() => setActiveBrandLetter(letter)}
-                    >
-                      {letter === BRAND_ALL_FILTER ? "الكل" : letter}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="products-brands-panel">
-                  {filteredBrands.length ? (
-                    <div className="products-brands-grid">
-                      {filteredBrands.map((brand) => (
-                        <button
-                          key={brand.id}
-                          type="button"
-                          className={`products-brand-chip ${draftBrand === brand.id ? "active" : ""}`}
-                          onClick={() => setDraftBrand((current) => (current === brand.id ? "" : brand.id))}
-                        >
-                          {getBrandLabel(brand)}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="products-empty-state">لا توجد علامات تجارية لهذا الحرف.</p>
-                  )}
-                </div>
-              </section>
-
-              <section className="products-filter-section">
-                <div className="products-section-head">
-                  <h3>تصنيفات</h3>
-                  <p>يمكن اختيار أكثر من فئة.</p>
-                </div>
-                <div className="products-category-tree">
-                  {rootCategories.map((category) => {
-                    const children = childrenByParent.get(category.id) || [];
-                    return (
-                      <details key={category.id} className="products-category-node">
-                        <summary>
-                          <span>{getCategoryLabel(category)}</span>
-                          <button
-                            type="button"
-                            className={`products-category-check ${draftCategories.includes(category.id) ? "active" : ""}`}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              toggleCategory(category.id);
-                            }}
-                          >
-                            {draftCategories.includes(category.id) ? "✓" : "+"}
-                          </button>
-                        </summary>
-                        {children.length ? (
-                          <div className="products-category-children">
-                            {children.map((child) => renderCategoryFilterNode(child, 1))}
-                          </div>
-                        ) : null}
-                      </details>
-                    );
-                  })}
-                </div>
-              </section>
-            </div>
-
-            <div className="products-modal-footer products-modal-footer-actions">
-              <button type="button" className="button secondary products-modal-action" onClick={resetFilters}>
-                مسح الكل
-              </button>
-              <button type="button" className="button primary products-modal-action products-modal-action-dark" onClick={applyFilters}>
-                تطبيق
-              </button>
-            </div>
+            {filterTab !== "categories" ? (
+              <div className="products-modal-footer products-modal-footer-actions">
+                <button type="button" className="button secondary products-modal-action" onClick={resetFilters}>
+                  مسح الكل
+                </button>
+                <button type="button" className="button primary products-modal-action products-modal-action-dark" onClick={applyFilters}>
+                  تطبيق
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
